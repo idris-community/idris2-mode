@@ -1,44 +1,44 @@
-;;; idris-ipkg-mode.el --- Major mode for editing Idris package files -*- lexical-binding: t -*-
+;;; idris2-ipkg-mode.el --- Major mode for editing Idris2 package files -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014
 
 ;; Author: David Raymond Christiansen
-;; URL: https://github.com/idris-hackers/idris-mode
+;; URL: https://github.com/idris2-hackers/idris2-mode
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "24"))
 
 
 ;;; Commentary:
 
-;; This is an Emacs mode for editing Idris packages. It requires the latest
-;; version of Idris, and some features may rely on the latest Git version of
-;; Idris.
+;; This is an Emacs mode for editing Idris2 packages. It requires the latest
+;; version of Idris2, and some features may rely on the latest Git version of
+;; Idris2.
 
 ;;; Code:
 (require 'ansi-color)
 (require 'compile)
 
-(require 'idris-core)
-(require 'idris-settings)
-(require 'idris-common-utils)
-(require 'idris-keys)
+(require 'idris2-core)
+(require 'idris2-settings)
+(require 'idris2-common-utils)
+(require 'idris2-keys)
 
 ;;; Faces
 
-(defface idris-ipkg-keyword-face
+(defface idris2-ipkg-keyword-face
   '((t (:inherit font-lock-keyword-face)))
-  "The face to highlight Idris package keywords"
-  :group 'idris-faces)
+  "The face to highlight Idris2 package keywords"
+  :group 'idris2-faces)
 
-(defface idris-ipkg-package-name-face
+(defface idris2-ipkg-package-name-face
   '((t (:inherit font-lock-function-name-face)))
   "The face to highlight the name of the package"
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
 
 ;;; Syntax
 
-(defconst idris-ipkg-syntax-table
+(defconst idris2-ipkg-syntax-table
   (let ((st (make-syntax-table (standard-syntax-table))))
     ;; Strings
     (modify-syntax-entry ?\" "\"" st)
@@ -52,23 +52,23 @@
 
     st))
 
-(defconst idris-ipkg-keywords
+(defconst idris2-ipkg-keywords
   '("package" "opts" "modules" "sourcedir" "makefile" "objs" "executable" "main" "libs" "pkgs"))
 
-(defconst idris-ipkg-font-lock-defaults
-  `(,idris-ipkg-keywords))
+(defconst idris2-ipkg-font-lock-defaults
+  `(,idris2-ipkg-keywords))
 
 
 ;;; Completion
 
-(defun idris-ipkg-find-keyword ()
+(defun idris2-ipkg-find-keyword ()
   (let ((start nil)
         (end (point))
         (failure (list nil nil nil)))
-    (if (idris-is-ident-char-p (char-before))
+    (if (idris2-is-ident-char-p (char-before))
         (progn
           (save-excursion
-            (while (idris-is-ident-char-p (char-before))
+            (while (idris2-is-ident-char-p (char-before))
               (backward-char))
             (setq start (point)))
           (if start
@@ -78,18 +78,18 @@
             failure))
       failure)))
 
-(defun idris-ipkg-complete-keyword ()
+(defun idris2-ipkg-complete-keyword ()
   "Complete the current .ipkg keyword, if possible"
   (interactive)
-  (cl-destructuring-bind (identifier start end) (idris-ipkg-find-keyword)
+  (cl-destructuring-bind (identifier start end) (idris2-ipkg-find-keyword)
     (when identifier
-      (list start end idris-ipkg-keywords))))
+      (list start end idris2-ipkg-keywords))))
 
 ;;; Inserting fields
-(defun idris-ipkg-insert-field ()
+(defun idris2-ipkg-insert-field ()
   "Insert one of the ipkg fields"
   (interactive)
-  (let ((field (completing-read "Field: " (remove "package" idris-ipkg-keywords) nil t)))
+  (let ((field (completing-read "Field: " (remove "package" idris2-ipkg-keywords) nil t)))
     (beginning-of-line)
     (while (and (not (looking-at-p "^\\s-*$")) (= (forward-line) 0)))
     (beginning-of-line)
@@ -104,11 +104,11 @@
 
 ;;; Clickable modules
 
-(defun idris-ipkg-make-files-clickable ()
+(defun idris2-ipkg-make-files-clickable ()
   "Make all modules with existing files clickable, where clicking opens them"
   (interactive)
-  (idris-clear-file-link-overlays 'idris-ipkg-mode)
-  (let ((src-dir (idris-ipkg-buffer-src-dir (file-name-directory (buffer-file-name)))))
+  (idris2-clear-file-link-overlays 'idris2-ipkg-mode)
+  (let ((src-dir (idris2-ipkg-buffer-src-dir (file-name-directory (buffer-file-name)))))
     ;; Make the sourcedir clickable
     (save-excursion
       (goto-char (point-min))
@@ -121,7 +121,7 @@
           (define-key map [mouse-2] #'(lambda ()
                                         (interactive)
                                         (dired src-dir)))
-          (idris-make-file-link-overlay start end map
+          (idris2-make-file-link-overlay start end map
                                         (concat "mouse-2: dired " src-dir)))))
     ;; Make the modules clickable
     (save-excursion
@@ -130,7 +130,7 @@
                   (re-search-forward "[a-zA-Z0-9\\.]+" nil t)
                   (let ((beg (match-beginning 0))
                         (end (match-end 0)))
-                    (idris-make-module-link beg end src-dir))))
+                    (idris2-make-module-link beg end src-dir))))
         (when (re-search-forward "^modules\\s-*=\\s-*" nil t)
           (cl-loop initially (mod-link)
                    while (looking-at-p "\\s-*,\\s-*")
@@ -148,20 +148,20 @@
             (define-key map [mouse-2] #'(lambda ()
                                           (interactive)
                                           (find-file makefile)))
-            (idris-make-file-link-overlay start end map  "mouse-2: edit makefile"))))))))
+            (idris2-make-file-link-overlay start end map  "mouse-2: edit makefile"))))))))
 
 
-(defun idris-ipkg-enable-clickable-files ()
+(defun idris2-ipkg-enable-clickable-files ()
   "Enable setting up clickable modules and makefiles on idle Emacs"
   (interactive)
-  (add-hook 'after-save-hook 'idris-ipkg-make-files-clickable)
-  (idris-ipkg-make-files-clickable))
+  (add-hook 'after-save-hook 'idris2-ipkg-make-files-clickable)
+  (idris2-ipkg-make-files-clickable))
 
 ;;; finding ipkg files
 
 ;; Based on http://www.emacswiki.org/emacs/EmacsTags section "Finding tags files"
 ;; That page is GPL, so this is OK to include
-(defun idris-find-file-upwards (suffix &optional allow-hidden)
+(defun idris2-find-file-upwards (suffix &optional allow-hidden)
   "Recursively searches each parent directory starting from the
 directory of the current buffer filename or from
 `default-directory' if that's not found, looking for a file with
@@ -171,7 +171,7 @@ or nil if not found."
       ((find-file-r (path)
                     (let* ((parent (file-name-directory path))
                            (matching (if parent
-                                         (idris-try-directory-files parent t (concat "\\\." suffix "$"))
+                                         (idris2-try-directory-files parent t (concat "\\\." suffix "$"))
                                        nil)))
                       (cond
                        (matching matching)
@@ -188,7 +188,7 @@ or nil if not found."
                                (string-prefix-p "." (file-name-nondirectory f))))
                       (find-file-r dir))))))
 
-(defun idris-try-directory-files (directory &optional full match nosort)
+(defun idris2-try-directory-files (directory &optional full match nosort)
   "Call `directory-files' with arguments DIRECTORY, FULL, MATCH,
 and NOSORT, but return the empty list on failure instead of
 throwing an error.
@@ -202,21 +202,21 @@ arguments."
       (directory-files directory full match nosort)
     (error nil)))
 
-(defvar idris-ipkg-build-buffer-name "*idris-build*")
+(defvar idris2-ipkg-build-buffer-name "*idris2-build*")
 
-(defun idris-ipkg--compilation-buffer-name-function (_mode)
-  "Compute a buffer name for the idris-mode compilation buffer."
-  idris-ipkg-build-buffer-name)
+(defun idris2-ipkg--compilation-buffer-name-function (_mode)
+  "Compute a buffer name for the idris2-mode compilation buffer."
+  idris2-ipkg-build-buffer-name)
 
-(defun idris-ipkg--ansi-compile-filter (start)
+(defun idris2-ipkg--ansi-compile-filter (start)
   "Apply ANSI formatting to the region of the buffer from START to point."
   (save-excursion
     (let ((buffer-read-only nil))
       (ansi-color-apply-on-region start (point)))))
 
-(defun idris-ipkg-command (ipkg-file command)
+(defun idris2-ipkg-command (ipkg-file command)
   "Run a command on ipkg-file. The command can be build, install, or clean."
-  ;; Idris must have its working directory in the same place as the ipkg file
+  ;; Idris2 must have its working directory in the same place as the ipkg file
   (let ((dir (file-name-directory ipkg-file))
         (file (file-name-nondirectory ipkg-file))
         (opt (cond ((equal command 'build) "--build")
@@ -225,17 +225,17 @@ arguments."
                    (t (error "Invalid command name %s" command)))))
     (unless dir
       (error "Unable to determine directory for filename '%s'" ipkg-file))
-    (let* ((default-directory dir) ; default-directory is a special variable - this starts idris in dir
+    (let* ((default-directory dir) ; default-directory is a special variable - this starts idris2 in dir
            (compilation-buffer-name-function
-            'idris-ipkg--compilation-buffer-name-function)
-           (command (concat idris-interpreter-path " " opt " " file))
+            'idris2-ipkg--compilation-buffer-name-function)
+           (command (concat idris2-interpreter-path " " opt " " file))
            (compilation-filter-hook
-            (cons 'idris-ipkg--ansi-compile-filter compilation-filter-hook)))
+            (cons 'idris2-ipkg--ansi-compile-filter compilation-filter-hook)))
       (compile command))))
 
-(defun idris-ipkg-build (ipkg-file)
+(defun idris2-ipkg-build (ipkg-file)
   (interactive (list
-                (let ((ipkg-default (idris-find-file-upwards "ipkg")))
+                (let ((ipkg-default (idris2-find-file-upwards "ipkg")))
                   (if ipkg-default
                       (read-file-name "Package file to build: "
                                       (file-name-directory (car ipkg-default))
@@ -243,11 +243,11 @@ arguments."
                                       t
                                       (file-name-nondirectory (car ipkg-default)))
                     (read-file-name "Package file to build: " nil nil nil t)))))
-  (idris-ipkg-command ipkg-file 'build))
+  (idris2-ipkg-command ipkg-file 'build))
 
-(defun idris-ipkg-install (ipkg-file)
+(defun idris2-ipkg-install (ipkg-file)
   (interactive (list
-                (let ((ipkg-default (idris-find-file-upwards "ipkg")))
+                (let ((ipkg-default (idris2-find-file-upwards "ipkg")))
                   (if ipkg-default
                       (read-file-name "Package file to install: "
                                       (file-name-directory (car ipkg-default))
@@ -255,11 +255,11 @@ arguments."
                                       t
                                       (file-name-nondirectory (car ipkg-default)))
                     (read-file-name "Package file to install: " nil nil nil t)))))
-  (idris-ipkg-command ipkg-file 'install))
+  (idris2-ipkg-command ipkg-file 'install))
 
-(defun idris-ipkg-clean (ipkg-file)
+(defun idris2-ipkg-clean (ipkg-file)
   (interactive (list
-                (let ((ipkg-default (idris-find-file-upwards "ipkg")))
+                (let ((ipkg-default (idris2-find-file-upwards "ipkg")))
                   (if ipkg-default
                       (read-file-name "Package file to clean: "
                                       (file-name-directory (car ipkg-default))
@@ -267,13 +267,13 @@ arguments."
                                       t
                                       (file-name-nondirectory (car ipkg-default)))
                     (read-file-name "Package file to clean: " nil nil nil t)))))
-  (idris-ipkg-command ipkg-file 'clean))
+  (idris2-ipkg-command ipkg-file 'clean))
 
-(defun idris-ipkg-build-quit ()
+(defun idris2-ipkg-build-quit ()
   (interactive)
-  (idris-kill-buffer idris-ipkg-build-buffer-name))
+  (idris2-kill-buffer idris2-ipkg-build-buffer-name))
 
-(defun idris-ipkg-buffer-src-dir (basename)
+(defun idris2-ipkg-buffer-src-dir (basename)
   (save-excursion
     (goto-char (point-min))
     (let ((found
@@ -285,18 +285,18 @@ arguments."
             (concat (file-name-directory basename) subdir))
         (file-name-directory basename)))))
 
-(defun idris-ipkg-find-src-dir (&optional ipkg-file)
+(defun idris2-ipkg-find-src-dir (&optional ipkg-file)
   (let ((found (or (and ipkg-file (list ipkg-file))
-                   (idris-find-file-upwards "ipkg"))))
+                   (idris2-find-file-upwards "ipkg"))))
     (if (not found)
         nil
       (setq ipkg-file (car found))
       ;; Now ipkg-file contains the path to the package
       (with-temp-buffer
         (insert-file-contents ipkg-file)
-        (idris-ipkg-buffer-src-dir ipkg-file)))))
+        (idris2-ipkg-buffer-src-dir ipkg-file)))))
 
-(defun idris-ipkg-buffer-cmdline-opts ()
+(defun idris2-ipkg-buffer-cmdline-opts ()
   (save-excursion
     (goto-char (point-min))
     (let ((found
@@ -307,27 +307,27 @@ arguments."
           (buffer-substring-no-properties (match-beginning 1) (match-end 1))
         ""))))
 
-(defun idris-ipkg-find-cmdline-opts (&optional ipkg-file)
+(defun idris2-ipkg-find-cmdline-opts (&optional ipkg-file)
   (let ((found (or (and ipkg-file (list ipkg-file))
-                   (idris-find-file-upwards "ipkg"))))
+                   (idris2-find-file-upwards "ipkg"))))
     (if (not found)
         nil
       (setq ipkg-file (car found))
       ;; Now ipkg-file contains the path to the package
       (with-temp-buffer
         (insert-file-contents ipkg-file)
-        (idris-ipkg-buffer-cmdline-opts)))))
+        (idris2-ipkg-buffer-cmdline-opts)))))
 
-(defun idris-ipkg-flags-for-current-buffer ()
+(defun idris2-ipkg-flags-for-current-buffer ()
   "Extract the command line options field from the current .ipkg buffer."
-  (let ((opts (idris-ipkg-find-cmdline-opts)))
+  (let ((opts (idris2-ipkg-find-cmdline-opts)))
     (if (stringp opts)
         (split-string opts nil t)
       nil)))
 
-(defun idris-ipkg-pkgs-for-current-buffer ()
+(defun idris2-ipkg-pkgs-for-current-buffer ()
   "Find the explicit list of packages for the current .ipkg buffer."
-  (let ((file (idris-find-file-upwards "ipkg")))
+  (let ((file (idris2-find-file-upwards "ipkg")))
     (when file
       (with-temp-buffer
         (let ((pkgs nil))
@@ -346,64 +346,64 @@ arguments."
                                  (get-pkg)))))
           pkgs)))))
 
-(defun idris-ipkg-pkgs-flags-for-current-buffer ()
-  "Compute a list of Idris command line options based on the pkgs field of the .ipkg file."
-  (let ((pkgs (idris-ipkg-pkgs-for-current-buffer)))
+(defun idris2-ipkg-pkgs-flags-for-current-buffer ()
+  "Compute a list of Idris2 command line options based on the pkgs field of the .ipkg file."
+  (let ((pkgs (idris2-ipkg-pkgs-for-current-buffer)))
     (cl-loop for pkg in pkgs appending (list "-p" pkg))))
 
-(add-to-list 'idris-command-line-option-functions 'idris-ipkg-flags-for-current-buffer)
-(add-to-list 'idris-command-line-option-functions 'idris-ipkg-pkgs-flags-for-current-buffer)
+(add-to-list 'idris2-command-line-option-functions 'idris2-ipkg-flags-for-current-buffer)
+(add-to-list 'idris2-command-line-option-functions 'idris2-ipkg-pkgs-flags-for-current-buffer)
 
 ;;; Settings
 
-(defgroup idris-ipkg nil "Idris package mode" :prefix 'idris-ipkg :group 'idris)
+(defgroup idris2-ipkg nil "Idris2 package mode" :prefix 'idris2-ipkg :group 'idris2)
 
-(defcustom idris-ipkg-mode-hook '(idris-ipkg-enable-clickable-files)
-  "Hook to run when setting up the mode for editing Idris packages."
+(defcustom idris2-ipkg-mode-hook '(idris2-ipkg-enable-clickable-files)
+  "Hook to run when setting up the mode for editing Idris2 packages."
   :type 'hook
-  :options '(idris-ipkg-enable-clickable-files)
-  :group 'idris-ipkg)
+  :options '(idris2-ipkg-enable-clickable-files)
+  :group 'idris2-ipkg)
 
 ;;; Mode definition
 
-(defvar idris-ipkg-mode-map (let ((map (make-sparse-keymap)))
+(defvar idris2-ipkg-mode-map (let ((map (make-sparse-keymap)))
                               (cl-loop for keyer
-                                       in '(idris-define-ipkg-keys
-                                            idris-define-ipkg-editing-keys)
+                                       in '(idris2-define-ipkg-keys
+                                            idris2-define-ipkg-editing-keys)
                                        do (funcall keyer map))
                               map)
-  "Keymap used for Idris package mode")
+  "Keymap used for Idris2 package mode")
 
-(easy-menu-define idris-ipkg-mode-menu idris-ipkg-mode-map
-  "Menu for Idris package mode"
+(easy-menu-define idris2-ipkg-mode-menu idris2-ipkg-mode-map
+  "Menu for Idris2 package mode"
   `("IPkg"
-    ["Build package" idris-ipkg-build t]
-    ["Install package" idris-ipkg-install t]
-    ["Clean package" idris-ipkg-clean t]
+    ["Build package" idris2-ipkg-build t]
+    ["Install package" idris2-ipkg-install t]
+    ["Clean package" idris2-ipkg-clean t]
     "----------------"
-    ["Insert field" idris-ipkg-insert-field t]))
+    ["Insert field" idris2-ipkg-insert-field t]))
 
 ;;;###autoload
-(define-derived-mode idris-ipkg-mode prog-mode "Idris Pkg"
-  "Major mode for Idris package files
-     \\{idris-ipkg-mode-map}
-Invokes `idris-ipkg-mode-hook'."
-  :group 'idris
-  :syntax-table idris-ipkg-syntax-table
+(define-derived-mode idris2-ipkg-mode prog-mode "Idris2 Pkg"
+  "Major mode for Idris2 package files
+     \\{idris2-ipkg-mode-map}
+Invokes `idris2-ipkg-mode-hook'."
+  :group 'idris2
+  :syntax-table idris2-ipkg-syntax-table
   (set (make-local-variable 'font-lock-defaults)
-       idris-ipkg-font-lock-defaults)
+       idris2-ipkg-font-lock-defaults)
   (set (make-local-variable 'completion-at-point-functions)
-       '(idris-ipkg-complete-keyword)))
+       '(idris2-ipkg-complete-keyword)))
 
 ;; Make filenames clickable
 (add-to-list 'compilation-error-regexp-alist-alist
-             `(idris-type-checking
+             `(idris2-type-checking
                "Type checking \\(.+\\)$" 1 nil nil 0 1))
 
-(cl-pushnew 'idris-type-checking compilation-error-regexp-alist)
+(cl-pushnew 'idris2-type-checking compilation-error-regexp-alist)
 
-(push '("\\.ipkg$" . idris-ipkg-mode) auto-mode-alist)
+(push '("\\.ipkg$" . idris2-ipkg-mode) auto-mode-alist)
 
-(provide 'idris-ipkg-mode)
+(provide 'idris2-ipkg-mode)
 
-;;; idris-ipkg-mode.el ends here
+;;; idris2-ipkg-mode.el ends here

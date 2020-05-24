@@ -1,4 +1,4 @@
-;;; idris-tests.el --- Tests for idris-mode  -*- lexical-binding: t -*-
+;;; idris2-tests.el --- Tests for idris2-mode  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  David Raymond Christiansen
 
@@ -20,62 +20,62 @@
 
 ;;; Commentary:
 
-;; This is a collection of simple tests for idris-mode.
+;; This is a collection of simple tests for idris2-mode.
 
 ;;; Code:
 
-(require 'idris-mode)
-(require 'inferior-idris)
-(require 'idris-ipkg-mode)
+(require 'idris2-mode)
+(require 'inferior-idris2)
+(require 'idris2-ipkg-mode)
 (require 'cl-lib)
 
 
 (ert-deftest trivial-test ()
   (should t))
 
-(ert-deftest idris-test-idris-editor-port ()
+(ert-deftest idris2-test-idris2-editor-port ()
   (let ((output "Can't find import Prelude\n37072\n"))
-    (should (string-match idris-process-port-output-regexp output))
+    (should (string-match idris2-process-port-output-regexp output))
     (should (string= "Can't find import Prelude\n" (match-string 1 output)))
     (should (string= "37072" (match-string 2 output))))
   (let ((output "37072\n"))
-    (should (string-match idris-process-port-output-regexp output))
+    (should (string-match idris2-process-port-output-regexp output))
     (should (null (match-string 1 output)))
     (should (string= "37072" (match-string 2 output)))))
 
-(ert-deftest idris-test-idris-quit ()
-  "Ensure that running Idris and quitting doesn't leave behind
+(ert-deftest idris2-test-idris2-quit ()
+  "Ensure that running Idris2 and quitting doesn't leave behind
 unwanted buffers."
   (let ((before (buffer-list)))
-    (idris-repl)
+    (idris2-repl)
     (dotimes (_ 5) (accept-process-output nil 1))
-    (idris-quit)
+    (idris2-quit)
     (let* ((after (buffer-list))
            (extra (cl-set-difference after before)))
       (should (= (length extra) 0)))))
 
-(ert-deftest idris-test-idris-quit-logging-enabled ()
-  "Ensure that running Idris and quitting doesn't leave behind
-unwanted buffers. In particular, only *idris-events* should
+(ert-deftest idris2-test-idris2-quit-logging-enabled ()
+  "Ensure that running Idris2 and quitting doesn't leave behind
+unwanted buffers. In particular, only *idris2-events* should
 remain."
   (let ((before (buffer-list))
-        (idris-log-events 't))
-    (idris-repl)
+        (idris2-log-events 't))
+    (idris2-repl)
     (dotimes (_ 5) (accept-process-output nil 1))
-    (idris-quit)
+    (idris2-quit)
     (let* ((after (buffer-list))
            (extra (cl-set-difference after before)))
       (should (= (length extra) 1))
-      (should (string= (buffer-name (car extra)) idris-event-buffer-name)))
+      (should (string= (buffer-name (car extra)) idris2-event-buffer-name)))
 
     ;; Cleanup
-    (kill-buffer idris-event-buffer-name)))
+    (kill-buffer idris2-event-buffer-name)))
 
-(ert-deftest idris-test-hole-load ()
+(ert-deftest idris2-test-hole-load ()
   "Test the hole-list-on-load setting."
-  (idris-quit)
+  (idris2-quit)
   ;;; The default setting should be to show holes
-  (should idris-hole-show-on-load)
+  (should idris2-hole-show-on-load)
 
   (let ((buffer (find-file "test-data/MetavarTest.idr")))
     ;;; Check that the file was loaded
@@ -83,41 +83,41 @@ remain."
 
     ;;; Check that it shows the hole list with the option turned on
     (with-current-buffer buffer
-      (idris-load-file))
+      (idris2-load-file))
     ;;; Allow async stuff to happen
     (dotimes (_ 5) (accept-process-output nil 1))
-    (let ((mv-buffer (get-buffer idris-hole-list-buffer-name)))
+    (let ((mv-buffer (get-buffer idris2-hole-list-buffer-name)))
       ;; The buffer exists and contains characters
       (should (bufferp mv-buffer))
       (should (> (buffer-size mv-buffer) 10)))
-    (idris-quit)
+    (idris2-quit)
 
     ;; Now check that it works with the setting the other way
-    (let ((idris-hole-show-on-load nil))
+    (let ((idris2-hole-show-on-load nil))
       (with-current-buffer buffer
-        (idris-load-file))
+        (idris2-load-file))
       (dotimes (_ 5) (accept-process-output nil 1))
-      (let ((mv-buffer (get-buffer idris-hole-list-buffer-name)))
+      (let ((mv-buffer (get-buffer idris2-hole-list-buffer-name)))
         (should-not (bufferp mv-buffer))
         (should (null mv-buffer))))
     ;; Clean up
     (kill-buffer))
 
   ;; More cleanup
-  (idris-quit))
+  (idris2-quit))
 
-(ert-deftest idris-test-proof-search ()
+(ert-deftest idris2-test-proof-search ()
   "Test that proof search works"
-  (idris-quit)
+  (idris2-quit)
 
   (let ((buffer (find-file "test-data/ProofSearch.idr")))
     (with-current-buffer buffer
-      (idris-load-file)
+      (idris2-load-file)
       (dotimes (_ 5) (accept-process-output nil 1))
       (goto-char (point-min))
       (re-search-forward "search_here")
       (goto-char (match-beginning 0))
-      (idris-proof-search)
+      (idris2-proof-search)
       (dotimes (_ 5) (accept-process-output nil 1))
       (should (looking-at-p "lteSucc (lteSucc (lteSucc (lteSucc (lteSucc lteZero))))"))
       (move-beginning-of-line nil)
@@ -127,44 +127,44 @@ remain."
       (kill-buffer)))
 
   ;; More cleanup
-  (idris-quit))
+  (idris2-quit))
 
-(ert-deftest idris-test-find-cmdline-args ()
-  "Test that idris-mode calculates command line arguments from .ipkg files."
+(ert-deftest idris2-test-find-cmdline-args ()
+  "Test that idris2-mode calculates command line arguments from .ipkg files."
   ;; Outside of a project, none are found
   (let ((buffer (find-file "test-data/ProofSearch.idr")))
     (with-current-buffer buffer
-      (should (null (idris-ipkg-flags-for-current-buffer)))
+      (should (null (idris2-ipkg-flags-for-current-buffer)))
       (kill-buffer)))
   ;; Inside of a project, the correct ones are found
   (let ((buffer (find-file "test-data/cmdline/src/Command/Line/Test.idr")))
     (with-current-buffer buffer
-      (should (equal (idris-ipkg-flags-for-current-buffer)
+      (should (equal (idris2-ipkg-flags-for-current-buffer)
                      (list "-p" "effects")))
       (kill-buffer))))
 
-(ert-deftest idris-test-error-buffer ()
-  "Test that loading a type-incorrect Idris buffer results in an error message buffer."
+(ert-deftest idris2-test-error-buffer ()
+  "Test that loading a type-incorrect Idris2 buffer results in an error message buffer."
   (let ((buffer (find-file "test-data/TypeError.idr")))
     (with-current-buffer buffer
-      (idris-load-file)
+      (idris2-load-file)
       (dotimes (_ 5) (accept-process-output nil 1))
-      (should (get-buffer idris-notes-buffer-name)))
-    (with-current-buffer (get-buffer idris-notes-buffer-name)
+      (should (get-buffer idris2-notes-buffer-name)))
+    (with-current-buffer (get-buffer idris2-notes-buffer-name)
       (goto-char (point-min))
       (should (re-search-forward "Nat" nil t))) ;; check that the buffer has something error-like
     (with-current-buffer buffer
       (kill-buffer))
-    (idris-quit)))
+    (idris2-quit)))
 
-(ert-deftest idris-test-ipkg-packages-with-underscores-and-dashes ()
+(ert-deftest idris2-test-ipkg-packages-with-underscores-and-dashes ()
   "Test that loading an ipkg file can have dependencies on packages with _ or - in the name."
   (let ((buffer (find-file "test-data/package-test/Packaging.idr")))
     (with-current-buffer buffer
-      (should (equal '("-p" "idris-free" "-p" "recursion_schemes")
-                     (idris-ipkg-pkgs-flags-for-current-buffer)))
+      (should (equal '("-p" "idris2-free" "-p" "recursion_schemes")
+                     (idris2-ipkg-pkgs-flags-for-current-buffer)))
       (kill-buffer buffer))
-    (idris-quit)))
+    (idris2-quit)))
 
-(provide 'idris-tests)
-;;; idris-tests.el ends here
+(provide 'idris2-tests)
+;;; idris2-tests.el ends here

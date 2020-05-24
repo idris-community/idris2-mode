@@ -1,4 +1,4 @@
-;;; idris-warnings.el --- Mark warnings reported by idris in buffers -*- lexical-binding: t -*-
+;;; idris2-warnings.el --- Mark warnings reported by idris2 in buffers -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013 Hannes Mehnert
 
@@ -23,70 +23,70 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-(require 'idris-core)
-(require 'idris-common-utils)
+(require 'idris2-core)
+(require 'idris2-common-utils)
 (require 'cl-lib)
 
-(defface idris-warning-face
+(defface idris2-warning-face
   '((((supports :underline (:style wave)))
      :underline (:style wave :color "red"))
     (t
      :inherit warning))
   "Face for warnings from the compiler."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defvar idris-warnings-buffers '() "All buffers which have warnings")
-(defvar-local idris-warnings '() "All warnings in the current buffer")
-(defvar idris-raw-warnings '() "All warnings from Idris")
+(defvar idris2-warnings-buffers '() "All buffers which have warnings")
+(defvar-local idris2-warnings '() "All warnings in the current buffer")
+(defvar idris2-raw-warnings '() "All warnings from Idris2")
 
-(defun idris-warning-event-hook-function (event)
+(defun idris2-warning-event-hook-function (event)
   (pcase event
     (`(:warning ,output ,_target)
-     (idris-warning-overlay output)
+     (idris2-warning-overlay output)
      t)
     (_ nil)))
 
-(defun idris-warning-reset-all ()
-  (mapc #'idris-warning-reset-buffer idris-warnings-buffers)
-  (setq idris-raw-warnings '())
-  (setq idris-warnings-buffers '()))
+(defun idris2-warning-reset-all ()
+  (mapc #'idris2-warning-reset-buffer idris2-warnings-buffers)
+  (setq idris2-raw-warnings '())
+  (setq idris2-warnings-buffers '()))
 
-(defun idris-warning-reset-buffer (buffer)
+(defun idris2-warning-reset-buffer (buffer)
   (when (buffer-live-p buffer)
-    (with-current-buffer buffer (idris-warning-reset))))
+    (with-current-buffer buffer (idris2-warning-reset))))
 
-(defun idris-warning-reset ()
-  (mapc #'delete-overlay idris-warnings)
-  (setq idris-warnings '())
-  (delq (current-buffer) idris-warnings-buffers))
+(defun idris2-warning-reset ()
+  (mapc #'delete-overlay idris2-warnings)
+  (setq idris2-warnings '())
+  (delq (current-buffer) idris2-warnings-buffers))
 
-(defun idris-get-line-region (line)
+(defun idris2-get-line-region (line)
   (goto-char (point-min))
   (cl-values
    (line-beginning-position line)
    (line-end-position line)))
 
-(defun idris-warning-overlay-p (overlay)
-  (overlay-get overlay 'idris-warning))
+(defun idris2-warning-overlay-p (overlay)
+  (overlay-get overlay 'idris2-warning))
 
-(defun idris-warning-overlay-at-point ()
+(defun idris2-warning-overlay-at-point ()
   "Return the overlay for a note starting at point, otherwise nil."
-  (cl-find (point) (cl-remove-if-not 'idris-warning-overlay-p (overlays-at (point)))
+  (cl-find (point) (cl-remove-if-not 'idris2-warning-overlay-p (overlays-at (point)))
         :key 'overlay-start))
 
-(defun idris-warning-overlay (warning)
+(defun idris2-warning-overlay (warning)
   "Add a compiler warning to the buffer as an overlay.
 May merge overlays, if there's already one in the same location.
 WARNING is of form (filename (startline startcolumn) (endline endcolumn) message &optional highlighting-spans)
-As of 20140807 (Idris 0.9.14.1-git:abee538) (endline endcolumn) is mostly the same as (startline startcolumn)
+As of 20140807 (Idris2 0.9.14.1-git:abee538) (endline endcolumn) is mostly the same as (startline startcolumn)
 "
   (cl-destructuring-bind (filename sl1 sl2 message spans) warning
     (let ((startline (nth 0 sl1))
           (startcol (1- (nth 1 sl1)))
           (endline (nth 0 sl2))
           (endcol (1- (nth 1 sl2))))
-      (push (list filename startline startcol message spans) idris-raw-warnings)
-      (let* ((fullpath (concat (file-name-as-directory idris-process-current-working-directory)
+      (push (list filename startline startcol message spans) idris2-raw-warnings)
+      (let* ((fullpath (concat (file-name-as-directory idris2-process-current-working-directory)
                                filename))
              (buffer (get-file-buffer fullpath)))
         (when (not (null buffer))
@@ -94,7 +94,7 @@ As of 20140807 (Idris 0.9.14.1-git:abee538) (endline endcolumn) is mostly the sa
             (save-restriction
               (widen) ;; Show errors at the proper location in narrowed buffers
               (goto-char (point-min))
-              (cl-multiple-value-bind (startp endp) (idris-get-line-region startline)
+              (cl-multiple-value-bind (startp endp) (idris2-get-line-region startline)
                 (goto-char startp)
                 (let ((start (+ startp startcol))
                       (end (if (and (= startline endline) (= startcol endcol))
@@ -107,26 +107,26 @@ As of 20140807 (Idris 0.9.14.1-git:abee538) (endline endcolumn) is mostly the sa
                                   (goto-char (point-min))
                                   (line-beginning-position endline))
                                 endcol)))
-                      (overlay (idris-warning-overlay-at-point)))
+                      (overlay (idris2-warning-overlay-at-point)))
                   (if overlay
-                      (idris-warning-merge-overlays overlay message)
-                    (idris-warning-create-overlay start end message)))))))))))
+                      (idris2-warning-merge-overlays overlay message)
+                    (idris2-warning-create-overlay start end message)))))))))))
 
-(defun idris-warning-merge-overlays (overlay message)
+(defun idris2-warning-merge-overlays (overlay message)
   (overlay-put overlay 'help-echo
                (concat (overlay-get overlay 'help-echo) "\n" message)))
 
-(defun idris-warning-create-overlay (start end message)
+(defun idris2-warning-create-overlay (start end message)
   (let ((overlay (make-overlay start end)))
-    (overlay-put overlay 'idris-warning message)
+    (overlay-put overlay 'idris2-warning message)
     (overlay-put overlay 'help-echo message)
-    (overlay-put overlay 'face 'idris-warning-face)
+    (overlay-put overlay 'face 'idris2-warning-face)
     (overlay-put overlay 'mouse-face 'highlight)
-    (push overlay idris-warnings)
-    (unless (memq (current-buffer) idris-warnings-buffers)
-      (push (current-buffer) idris-warnings-buffers))
+    (push overlay idris2-warnings)
+    (unless (memq (current-buffer) idris2-warnings-buffers)
+      (push (current-buffer) idris2-warnings-buffers))
     overlay))
 
-(provide 'idris-warnings)
+(provide 'idris2-warnings)
 
 

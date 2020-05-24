@@ -1,4 +1,4 @@
-# Makefile for idris-mode, to run tests and ensure dependencies are in order
+# Makefile for idris2-mode, to run tests and ensure dependencies are in order
 # Portions based on the Makefile for Proof General
 
 EMACS=emacs
@@ -11,27 +11,27 @@ BATCHEMACS=$(EMACS) --batch --no-site-file -q \
 
 BYTECOMP = $(BATCHEMACS) -eval '(progn (require (quote bytecomp)) (setq byte-compile-warnings t) (setq byte-compile-error-on-warn t))' -f batch-byte-compile
 
-OBJS =	idris-commands.elc		\
-	idris-common-utils.elc		\
-	idris-compat.elc		\
-	idris-core.elc			\
-	idris-events.elc		\
-	idris-highlight-input.elc	\
-	idris-info.elc			\
-	idris-ipkg-mode.elc		\
-	idris-keys.elc			\
-	idris-log.elc			\
-	idris-hole-list.elc		\
-	idris-mode.elc			\
-	idris-prover.elc		\
-	idris-repl.elc			\
-	idris-settings.elc		\
-	idris-simple-indent.elc		\
-	idris-tree-info.elc             \
-	idris-syntax.elc		\
-	idris-warnings.elc		\
-	idris-warnings-tree.elc		\
-	inferior-idris.elc
+OBJS =	idris2-commands.elc		\
+	idris2-common-utils.elc		\
+	idris2-compat.elc		\
+	idris2-core.elc			\
+	idris2-events.elc		\
+	idris2-highlight-input.elc	\
+	idris2-info.elc			\
+	idris2-ipkg-mode.elc		\
+	idris2-keys.elc			\
+	idris2-log.elc			\
+	idris2-hole-list.elc		\
+	idris2-mode.elc			\
+	idris2-prover.elc		\
+	idris2-repl.elc			\
+	idris2-settings.elc		\
+	idris2-simple-indent.elc		\
+	idris2-tree-info.elc             \
+	idris2-syntax.elc		\
+	idris2-warnings.elc		\
+	idris2-warnings-tree.elc		\
+	inferior-idris2.elc
 
 .el.elc:
 	$(BYTECOMP) $<
@@ -39,7 +39,7 @@ OBJS =	idris-commands.elc		\
 build: getdeps $(OBJS)
 
 test: getdeps build
-	$(BATCHEMACS) -L . -l ert -l idris-tests.el -f ert-run-tests-batch-and-exit
+	$(BATCHEMACS) -L . -l ert -l idris2-tests.el -f ert-run-tests-batch-and-exit
 
 clean:
 	-rm -f $(OBJS)

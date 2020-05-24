@@ -1,4 +1,4 @@
-;;; idris-hole-list.el --- List Idris holes in a buffer -*- lexical-binding: t -*-
+;;; idris2-hole-list.el --- List Idris2 holes in a buffer -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014 David Raymond Christiansen
 
@@ -26,120 +26,120 @@
 (require 'cl-lib)
 (require 'prop-menu)
 
-(require 'idris-core)
-(require 'idris-keys)
-(require 'idris-warnings-tree)
-(require 'idris-settings)
+(require 'idris2-core)
+(require 'idris2-keys)
+(require 'idris2-warnings-tree)
+(require 'idris2-settings)
 
-(defvar idris-hole-list-buffer-name (idris-buffer-name :holes)
-  "The name of the buffer containing Idris holes")
+(defvar idris2-hole-list-buffer-name (idris2-buffer-name :holes)
+  "The name of the buffer containing Idris2 holes")
 
-(defun idris-hole-list-quit ()
-  "Quit the Idris hole list"
+(defun idris2-hole-list-quit ()
+  "Quit the Idris2 hole list"
   (interactive)
-  (idris-kill-buffer idris-hole-list-buffer-name))
+  (idris2-kill-buffer idris2-hole-list-buffer-name))
 
-(defvar idris-hole-list-mode-map
+(defvar idris2-hole-list-mode-map
   (let ((map (make-keymap)))
     (suppress-keymap map)
-    (define-key map (kbd "q") 'idris-hole-list-quit)
-    (define-key map (kbd "RET") 'idris-compiler-notes-default-action-or-show-details)
-    (define-key map (kbd "<mouse-2>") 'idris-compiler-notes-default-action-or-show-details/mouse)
+    (define-key map (kbd "q") 'idris2-hole-list-quit)
+    (define-key map (kbd "RET") 'idris2-compiler-notes-default-action-or-show-details)
+    (define-key map (kbd "<mouse-2>") 'idris2-compiler-notes-default-action-or-show-details/mouse)
     ;;; Allow buttons to be clicked with the left mouse button in the hole list
     (define-key map [follow-link] 'mouse-face)
     (cl-loop for keyer
-             in '(idris-define-docs-keys
-                  idris-define-general-keys
-                  idris-define-active-term-keys)
+             in '(idris2-define-docs-keys
+                  idris2-define-general-keys
+                  idris2-define-active-term-keys)
              do (funcall keyer map))
     map))
 
-(easy-menu-define idris-hole-list-mode-menu idris-hole-list-mode-map
-  "Menu for the Idris hole list buffer"
-  `("Idris Holes"
-    ["Show term interaction widgets" idris-add-term-widgets t]
-    ["Close hole list buffer" idris-hole-list-quit t]
+(easy-menu-define idris2-hole-list-mode-menu idris2-hole-list-mode-map
+  "Menu for the Idris2 hole list buffer"
+  `("Idris2 Holes"
+    ["Show term interaction widgets" idris2-add-term-widgets t]
+    ["Close hole list buffer" idris2-hole-list-quit t]
     "------------------"
-    ["Customize idris-hole-list-mode" (customize-group 'idris-hole-list) t]
-    ["Customize fonts and colors" (customize-group 'idris-faces) t]))
+    ["Customize idris2-hole-list-mode" (customize-group 'idris2-hole-list) t]
+    ["Customize fonts and colors" (customize-group 'idris2-faces) t]))
 
-(define-derived-mode idris-hole-list-mode fundamental-mode "Idris Holes"
-  "Major mode used for transient Idris hole list buffers
-   \\{idris-hole-list-mode-map}
-Invoces `idris-hole-list-mode-hook'."
-  (setq-local prop-menu-item-functions '(idris-context-menu-items)))
+(define-derived-mode idris2-hole-list-mode fundamental-mode "Idris2 Holes"
+  "Major mode used for transient Idris2 hole list buffers
+   \\{idris2-hole-list-mode-map}
+Invoces `idris2-hole-list-mode-hook'."
+  (setq-local prop-menu-item-functions '(idris2-context-menu-items)))
 
-(defun idris-hole-list-buffer ()
-  "Return the Idris hole buffer, creating one if there is not one"
-  (get-buffer-create idris-hole-list-buffer-name))
+(defun idris2-hole-list-buffer ()
+  "Return the Idris2 hole buffer, creating one if there is not one"
+  (get-buffer-create idris2-hole-list-buffer-name))
 
-(defun idris-hole-list-buffer-visible-p ()
-  (if (get-buffer-window idris-hole-list-buffer-name 'visible) t nil))
+(defun idris2-hole-list-buffer-visible-p ()
+  (if (get-buffer-window idris2-hole-list-buffer-name 'visible) t nil))
 
-(defun idris-hole-list-show (hole-info)
+(defun idris2-hole-list-show (hole-info)
   (if (null hole-info)
       (progn (message "No holes found!")
-             (idris-hole-list-quit))
-    (with-current-buffer (idris-hole-list-buffer)
+             (idris2-hole-list-quit))
+    (with-current-buffer (idris2-hole-list-buffer)
       (setq buffer-read-only nil)
       (erase-buffer)
-      (idris-hole-list-mode)
-      (insert (propertize "Holes" 'face 'idris-info-title-face) "\n\n")
-      (when idris-show-help-text
+      (idris2-hole-list-mode)
+      (insert (propertize "Holes" 'face 'idris2-info-title-face) "\n\n")
+      (when idris2-show-help-text
         (insert "This buffer displays the unsolved holes from the currently-loaded code. ")
         (insert (concat "Press the "
-                        (if idris-enable-elab-prover "[E]" "[P]")
+                        (if idris2-enable-elab-prover "[E]" "[P]")
                         " buttons to solve the holes interactively in the prover."))
         (let ((fill-column 80))
           (fill-region (point-min) (point-max)))
         (insert "\n\n"))
 
-      (dolist (tree (mapcar #'idris-tree-for-hole hole-info))
-        (idris-tree-insert tree "")
+      (dolist (tree (mapcar #'idris2-tree-for-hole hole-info))
+        (idris2-tree-insert tree "")
         (insert "\n\n"))
       (message "Press q to close")
       (setq buffer-read-only t)
       (goto-char (point-min)))
-    (display-buffer (idris-hole-list-buffer))))
+    (display-buffer (idris2-hole-list-buffer))))
 
-(defun idris-hole-tree-printer (tree)
+(defun idris2-hole-tree-printer (tree)
   "Print TREE, formatted for holes."
-  (idris-propertize-spans (idris-repl-semantic-text-props (idris-tree.highlighting tree))
-    (insert (idris-tree.item tree)))
-  (when (idris-tree.button tree)
+  (idris2-propertize-spans (idris2-repl-semantic-text-props (idris2-tree.highlighting tree))
+    (insert (idris2-tree.item tree)))
+  (when (idris2-tree.button tree)
     (insert " ")
-    (apply #'insert-button (idris-tree.button tree))
-    (insert (idris-tree.after-button tree))))
+    (apply #'insert-button (idris2-tree.button tree))
+    (insert (idris2-tree.after-button tree))))
 
 
 ;;; Prevent circularity error
-(autoload 'idris-prove-hole "idris-commands.el")
+(autoload 'idris2-prove-hole "idris2-commands.el")
 
-(defun idris-tree-for-hole (hole)
+(defun idris2-tree-for-hole (hole)
   "Generate a tree for HOLE.
 
 HOLE should be a three-element list consisting of the
 hole name, its premises, and its conclusion."
   (cl-destructuring-bind (name premises conclusion) hole
-    (make-idris-tree :item name
-                     :button (if idris-enable-elab-prover
+    (make-idris2-tree :item name
+                     :button (if idris2-enable-elab-prover
                                  `("[E]"
                                    help-echo "Elaborate interactively"
                                    action ,#'(lambda (_)
                                                (interactive)
-                                               (idris-prove-hole name t)))
+                                               (idris2-prove-hole name t)))
                                `("[P]"
                                  help-echo "Open in prover"
                                  action ,#'(lambda (_)
                                              (interactive)
-                                             (idris-prove-hole name))))
+                                             (idris2-prove-hole name))))
                      :highlighting `((0 ,(length name) ((:decor :metavar))))
-                     :print-fn #'idris-hole-tree-printer
-                     :collapsed-p (not idris-hole-list-show-expanded) ; from customize
-                     :preserve-properties '(idris-tt-term)
-                     :kids (list (idris-tree-for-hole-details name premises conclusion)))))
+                     :print-fn #'idris2-hole-tree-printer
+                     :collapsed-p (not idris2-hole-list-show-expanded) ; from customize
+                     :preserve-properties '(idris2-tt-term)
+                     :kids (list (idris2-tree-for-hole-details name premises conclusion)))))
 
-(defun idris-tree-for-hole-details (name premises conclusion)
+(defun idris2-tree-for-hole-details (name premises conclusion)
   (let* ((name-width (1+ (apply #'max 0 (length name)
                                 (mapcar #'(lambda (h) (length (car h)))
                                         premises))))
@@ -148,12 +148,12 @@ hole name, its premises, and its conclusion."
                      (dolist (h premises)
                        (cl-destructuring-bind (name type formatting) h
                          (cl-dotimes (_ (- name-width (length name))) (insert " "))
-                         (idris-propertize-spans (idris-repl-semantic-text-props
+                         (idris2-propertize-spans (idris2-repl-semantic-text-props
                                                   `((0 ,(length name) ((:decor :bound)))))
                            (insert name))
                          (insert " : ")
                          (let ((start (point)))
-                           (idris-propertize-spans (idris-repl-semantic-text-props formatting)
+                           (idris2-propertize-spans (idris2-repl-semantic-text-props formatting)
                              (insert type))
                            (insert "\n")
                            ;; Indent the term to match the tree and
@@ -163,21 +163,21 @@ hole name, its premises, and its conclusion."
                              (forward-line -1)
                              (while (< start (point))
                                ;; Preserve the term annotation, to not break active terms
-                               (let ((tm (get-text-property (point) 'idris-tt-term)))
+                               (let ((tm (get-text-property (point) 'idris2-tt-term)))
                                  (insert-before-markers
                                   (propertize (make-string (+ 3 name-width) ? )
-                                              'idris-tt-term tm)))
+                                              'idris2-tt-term tm)))
                                (forward-line -1))
                              (goto-char term-end-marker)))))
                      (setq divider-marker (point-marker))
                      (cl-destructuring-bind (type formatting) conclusion
                        (when premises
                          (insert " ")
-                         (idris-propertize-spans (idris-repl-semantic-text-props
+                         (idris2-propertize-spans (idris2-repl-semantic-text-props
                                                   `((0 ,(length name) ((:decor :metavar)))))
                            (insert name))
                          (insert " : "))
-                       (idris-propertize-spans (idris-repl-semantic-text-props formatting)
+                       (idris2-propertize-spans (idris2-repl-semantic-text-props formatting)
                          (insert type)))
                      (when premises
                        (let ((width (apply #'max 0
@@ -187,10 +187,10 @@ hole name, its premises, and its conclusion."
                          (dotimes (_ (1+ width)) (insert "-"))
                          (insert "\n")))
                      (buffer-string))))
-    (make-idris-tree :item contents
+    (make-idris2-tree :item contents
                      :active-p nil
                      :highlighting '()
-                     :preserve-properties '(idris-tt-term))))
+                     :preserve-properties '(idris2-tt-term))))
 
 
-(provide 'idris-hole-list)
+(provide 'idris2-hole-list)

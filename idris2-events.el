@@ -1,4 +1,4 @@
-;;; idris-events.el --- Logging of events in inferior Idris -*- lexical-binding: t -*-
+;;; idris2-events.el --- Logging of events in inferior Idris2 -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013 Hannes Mehnert
 
@@ -25,17 +25,17 @@
 
 (require 'pp)
 
-(require 'idris-core)
-(require 'idris-common-utils)
-(require 'idris-settings)
+(require 'idris2-core)
+(require 'idris2-common-utils)
+(require 'idris2-settings)
 
-(defvar idris-event-buffer-name (idris-buffer-name :events)
-  "The name of the Idris event buffer.")
+(defvar idris2-event-buffer-name (idris2-buffer-name :events)
+  "The name of the Idris2 event buffer.")
 
-(defun idris-events-buffer ()
+(defun idris2-events-buffer ()
   "Return or create the event log buffer."
-  (or (get-buffer idris-event-buffer-name)
-      (let ((buffer (get-buffer-create idris-event-buffer-name)))
+  (or (get-buffer idris2-event-buffer-name)
+      (let ((buffer (get-buffer-create idris2-event-buffer-name)))
         (with-current-buffer buffer
           (buffer-disable-undo)
           (set (make-local-variable 'outline-regexp) "^(")
@@ -44,12 +44,12 @@
           (setq buffer-read-only t))
         buffer)))
 
-(defun idris-event-log (event sending)
+(defun idris2-event-log (event sending)
   "Record the fact that EVENT occured in the SENDING direction.
 
-The event is only logged if `idris-log-events' is non-nil."
-  (when idris-log-events
-    (with-current-buffer (idris-events-buffer)
+The event is only logged if `idris2-log-events' is non-nil."
+  (when idris2-log-events
+    (with-current-buffer (idris2-events-buffer)
       (goto-char (point-max))
       (let ((buffer-read-only nil)
             (time (format-time-string "%H:%M:%S")))
@@ -57,15 +57,15 @@ The event is only logged if `idris-log-events' is non-nil."
           (if sending
               (insert (concat time " -> "))
             (insert (concat time " <- ")))
-          (idris-pprint-event event (current-buffer))))
+          (idris2-pprint-event event (current-buffer))))
       (goto-char (point-max)))))
 
-(defun idris-pprint-event (event buffer)
+(defun idris2-pprint-event (event buffer)
   "Pretty print EVENT in BUFFER."
   (let ((print-length 20)
         (print-level 10)
         (pp-escape-newlines t))
     (pp event buffer)))
 
-(provide 'idris-events)
-;;; idris-events.el ends here
+(provide 'idris2-events)
+;;; idris2-events.el ends here

@@ -1,4 +1,4 @@
-;; idris-syntax.el --- idris syntax highlighting -*- lexical-binding: t -*-
+;; idris2-syntax.el --- idris2 syntax highlighting -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2013 tim dixon, David Raymond Christiansen and Hannes Mehnert
 ;;
@@ -19,97 +19,97 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'idris-core)
-(require 'idris-common-utils)
+(require 'idris2-core)
+(require 'idris2-common-utils)
 (require 'cl-lib)
 
-(defgroup idris-faces nil
-  "Fonts and colors for Idris code.
+(defgroup idris2-faces nil
+  "Fonts and colors for Idris2 code.
 
-Because Idris's highlighting is semantic rather than syntactic,
+Because Idris2's highlighting is semantic rather than syntactic,
 there aren't really very good defaults to appeal to from
 font-lock. You may need to change these settings to work well
 with your favorite theme. If you do so, please consider
 contributing the settings upstream to the theme maintainer."
-  :prefix 'idris :group 'idris)
+  :prefix 'idris2 :group 'idris2)
 
-(defface idris-identifier-face
+(defface idris2-identifier-face
   '((t (:inherit default)))
-  "The face to highlight Idris identifiers with."
-  :group 'idris-faces)
+  "The face to highlight Idris2 identifiers with."
+  :group 'idris2-faces)
 
-(defface idris-hole-face
-  '((t (:inherit idris-identifier-face)))
-  "The face to highlight Idris holes with."
-  :group 'idris-faces)
+(defface idris2-hole-face
+  '((t (:inherit idris2-identifier-face)))
+  "The face to highlight Idris2 holes with."
+  :group 'idris2-faces)
 
-(defface idris-keyword-face
+(defface idris2-keyword-face
   '((t (:inherit font-lock-keyword-face)))
-  "The face to highlight Idris keywords with."
-  :group 'idris-faces)
+  "The face to highlight Idris2 keywords with."
+  :group 'idris2-faces)
 
-(defface idris-module-face
+(defface idris2-module-face
   '((t (:inherit font-lock-variable-name-face)))
-  "The face to highlight Idris module names with."
-  :group 'idris-faces)
+  "The face to highlight Idris2 module names with."
+  :group 'idris2-faces)
 
-(defface idris-directive-face
+(defface idris2-directive-face
   '((t (:inherit font-lock-keyword-face)))
-  "The face to highlight Idris compiler directives."
-  :group 'idris-faces)
+  "The face to highlight Idris2 compiler directives."
+  :group 'idris2-faces)
 
-(defface idris-directive-argument-face
+(defface idris2-directive-argument-face
   '((t (:inherit font-lock-preprocessor-face)))
-  "The face to highlight arguments to Idris directives."
-  :group 'idris-faces)
+  "The face to highlight arguments to Idris2 directives."
+  :group 'idris2-faces)
 
-(defface idris-definition-face
+(defface idris2-definition-face
   '((t (:inherit font-lock-function-name-face)))
   "The face to highlight things being defined in."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defface idris-parameter-face
+(defface idris2-parameter-face
   '((t (:inherit font-lock-constant-face)))
   "The face to highlight formal parameters to function definitions with."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defface idris-colon-face
+(defface idris2-colon-face
   '((t (:inherit font-lock-variable-name-face)))
   "The face to highlight ':' in type annotations with."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defface idris-equals-face
+(defface idris2-equals-face
   '((t (:inherit font-lock-variable-name-face)))
   "The face to highlight '=' in definitions with."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defface idris-operator-face
+(defface idris2-operator-face
   '((t (:inherit font-lock-variable-name-face)))
   "The face to highlight operators with."
-  :group 'idris-faces)
+  :group 'idris2-faces)
 
-(defface idris-char-face
+(defface idris2-char-face
   '((t (:inherit font-lock-string-face)))
-  "The face used to highlight character literals in Idris"
-  :group 'idris-faces)
+  "The face used to highlight character literals in Idris2"
+  :group 'idris2-faces)
 
-(defface idris-unsafe-face
+(defface idris2-unsafe-face
   '((t (:inherit font-lock-warning-face)))
-  "The face used to highlight unsafe Idris features, such as %assert_total"
-  :group 'idris-faces)
+  "The face used to highlight unsafe Idris2 features, such as %assert_total"
+  :group 'idris2-faces)
 
 
-(defvar idris-definition-keywords
+(defvar idris2-definition-keywords
   '("data" "codata" "constructor" "interface" "record" "postulate")
   "Keywords that introduce some identifier.")
 
-(defvar idris-operator-regexp
+(defvar idris2-operator-regexp
   (let ((op "-!#$%&*+./<=>@\\\\^|~:"))
     (concat "\\?[" op "]+" ; starts with ?, has at least one more opchar
             "\\|" "["op"][" op "?]*")) ; doesn't start with ?
-  "A regular expression matching an Idris operator.")
+  "A regular expression matching an Idris2 operator.")
 
-(defconst idris-syntax-table
+(defconst idris2-syntax-table
   (let ((st (make-syntax-table)))
 
     ;; Matching parens
@@ -127,7 +127,7 @@ contributing the settings upstream to the theme maintainer."
     (modify-syntax-entry ?' "_" st)
     (modify-syntax-entry ?_ "_" st)
 
-    ;; Idris operator chars get punctuation syntax
+    ;; Idris2 operator chars get punctuation syntax
     (mapc #'(lambda (ch) (modify-syntax-entry ch "." st))
 	  "!#$%&*+./<=>@^|~:")
     ;; - is an operator char but may also be 1st or 2nd char of comment starter
@@ -144,7 +144,7 @@ contributing the settings upstream to the theme maintainer."
 
     st))
 
-(defconst idris-keywords
+(defconst idris2-keywords
   '("abstract" "case" "covering" "default" "do" "dsl" "else" "export" "if"
     "implementation" "implicit" "import" "in" "infix" "infixl" "infixr"
     "module" "mutual" "namespace" "of" "let" "parameters" "partial"
@@ -152,12 +152,12 @@ contributing the settings upstream to the theme maintainer."
     "tactics" "then" "total" "using" "where" "with"))
 
 
-(defconst idris-special-char-regexp
-  (let ((idris-special-chars
+(defconst idris2-special-char-regexp
+  (let ((idris2-special-chars
          (cl-loop for code
                   across "0abfnrtv\"'\\"
                   collecting (concat "'\\" (string code) "'")))
-        (idris-ascii-escapes
+        (idris2-ascii-escapes
          (cl-loop for esc
                   in '("NUL" "SOH" "STX" "ETX" "EOT" "ENQ"
                        "ACK" "BEL" "BS" "HT" "LF" "VT" "FF"
@@ -176,14 +176,14 @@ contributing the settings upstream to the theme maintainer."
             "\\|"
             "\\(?:'[^'\\]'\\)"
             "\\|"
-            (regexp-opt (append idris-ascii-escapes idris-special-chars)))))
+            (regexp-opt (append idris2-ascii-escapes idris2-special-chars)))))
 
-(defun idris-syntax-propertize-function (begin end)
+(defun idris2-syntax-propertize-function (begin end)
   "Add syntax properties to a region of the buffer that the
 syntax table won't support, such as characters."
   (save-excursion
     (goto-char begin)
-    (while (re-search-forward idris-special-char-regexp end t)
+    (while (re-search-forward idris2-special-char-regexp end t)
       (let ((open (match-beginning 0))
             (close (match-end 0)))
         (add-text-properties open (1+ open) '(syntax-table (7 . ?\')))
@@ -194,14 +194,14 @@ syntax table won't support, such as characters."
       (let ((open (match-beginning 0)))
         (add-text-properties open (1+ open) '(syntax-table (1 . nil)))))))
 
-(defconst idris-font-lock-keyword-regexp
-  (regexp-opt (append idris-definition-keywords
-                      idris-keywords)
+(defconst idris2-font-lock-keyword-regexp
+  (regexp-opt (append idris2-definition-keywords
+                      idris2-keywords)
               'words)
-  "A regexp for matching Idris keywords")
+  "A regexp for matching Idris2 keywords")
 
-(defun idris-font-lock-literate-search (regexp lidr limit)
-  "Find REGEXP in Idris source between point and LIMIT, where LIDR is non-nil for literate files..
+(defun idris2-font-lock-literate-search (regexp lidr limit)
+  "Find REGEXP in Idris2 source between point and LIMIT, where LIDR is non-nil for literate files..
 
 See the documentation for search-based fontification,
 esp. `font-lock-defaults', for details."
@@ -216,58 +216,58 @@ esp. `font-lock-defaults', for details."
                      (and (looking-at-p "^> ")
                           (not (looking-at-p "^>\\s-*|||"))))))
           t
-        (idris-font-lock-literate-search regexp lidr limit))
+        (idris2-font-lock-literate-search regexp lidr limit))
     nil))
 
-;; This should be a function so that it evaluates `idris-lidr-p' at the correct time
-(defun idris-font-lock-defaults ()
+;; This should be a function so that it evaluates `idris2-lidr-p' at the correct time
+(defun idris2-font-lock-defaults ()
   (cl-flet ((line-start (regexp)
-                        (if (idris-lidr-p)
+                        (if (idris2-lidr-p)
                             (concat "^>" regexp)
                           (concat "^" regexp))))
     `('(
         ;; Imports
         (,(line-start "\\(import\\)\\s-+\\(public\\)")
-         (1 'idris-keyword-face)
-         (2 'idris-keyword-face))
+         (1 'idris2-keyword-face)
+         (2 'idris2-keyword-face))
         ;; Documentation comments.
         (,(line-start "\\s-*\\(|||\\)\\(.*\\)$")
          (1 font-lock-comment-delimiter-face)
-         (2 'idris-inline-doc-face))
-        (,(apply-partially #'idris-font-lock-literate-search "\\s-*\\(|||\\)\\(.*\\)$" (idris-lidr-p))
+         (2 'idris2-inline-doc-face))
+        (,(apply-partially #'idris2-font-lock-literate-search "\\s-*\\(|||\\)\\(.*\\)$" (idris2-lidr-p))
          (1 font-lock-comment-delimiter-face)
-         (2 'idris-inline-doc-face))
+         (2 'idris2-inline-doc-face))
         (,(line-start "\\s-*\\(|||\\)\\s-*\\(@\\)\\s-*\\(\\sw+\\)")
          (1 font-lock-comment-delimiter-face t)
          (2 font-lock-comment-delimiter-face t)
-         (3 'idris-parameter-face t))
+         (3 'idris2-parameter-face t))
         ;; %assert_total
-        ("%assert_total" . 'idris-unsafe-face)
+        ("%assert_total" . 'idris2-unsafe-face)
         ;; Expression-like directives: %runElab and %unify_log
-        (,(apply-partially #'idris-font-lock-literate-search
+        (,(apply-partially #'idris2-font-lock-literate-search
                            (regexp-opt '("%runElab" "%unify_log"))
-                           (idris-lidr-p))
-         (0 'idris-directive-face))
+                           (idris2-lidr-p))
+         (0 'idris2-directive-face))
         ;; `%access`, `%default`, etc
         (,(line-start "\\s-*\\(%\\w+\\)\\s-*\\(.*\\)")
-         (1 'idris-directive-face)
-         (2 'idris-directive-argument-face))
+         (1 'idris2-directive-face)
+         (2 'idris2-directive-argument-face))
         ;; Keywords
-        (,(apply-partially #'idris-font-lock-literate-search idris-font-lock-keyword-regexp (idris-lidr-p))
-         (1 'idris-keyword-face))
+        (,(apply-partially #'idris2-font-lock-literate-search idris2-font-lock-keyword-regexp (idris2-lidr-p))
+         (1 'idris2-keyword-face))
         ;; Operators
-        (,(apply-partially #'idris-font-lock-literate-search idris-operator-regexp (idris-lidr-p)) . 'idris-operator-face)
+        (,(apply-partially #'idris2-font-lock-literate-search idris2-operator-regexp (idris2-lidr-p)) . 'idris2-operator-face)
         ;; Holes
-        (,(apply-partially #'idris-font-lock-literate-search "\\?[a-zA-Z_]\\w*" (idris-lidr-p)) . 'idris-hole-face)
+        (,(apply-partially #'idris2-font-lock-literate-search "\\?[a-zA-Z_]\\w*" (idris2-lidr-p)) . 'idris2-hole-face)
         ;; Identifiers
-        (,(apply-partially #'idris-font-lock-literate-search "[a-zA-Z_]\\w*" (idris-lidr-p)) . 'idris-identifier-face)
+        (,(apply-partially #'idris2-font-lock-literate-search "[a-zA-Z_]\\w*" (idris2-lidr-p)) . 'idris2-identifier-face)
         ;; Scary stuff
-        (,(apply-partially #'idris-font-lock-literate-search
+        (,(apply-partially #'idris2-font-lock-literate-search
                            (regexp-opt '("believe_me" "really_believe_me" "assert_total" "assert_smaller" "prim__believe_me"))
-                           (idris-lidr-p))
-         0 'idris-unsafe-face t)
+                           (idris2-lidr-p))
+         0 'idris2-unsafe-face t)
         ))))
 
 
 
-(provide 'idris-syntax)
+(provide 'idris2-syntax)

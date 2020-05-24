@@ -1,4 +1,4 @@
-;;; idris-compat.el --- compatibility functions for Emacs 24.1 -*- lexical-binding: t -*-
+;;; idris2-compat.el --- compatibility functions for Emacs 24.1 -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; This file defines defvar-local, which was introduced in Emacs 24.3, and string-suffix-p, from Emacs 24.4.
@@ -30,5 +30,5 @@ attention to case differences."
            (eq t (compare-strings suffix nil nil
                                   string start-pos nil ignore-case))))))
 
-(provide 'idris-compat)
-;;; idris-compat.el ends here
+(provide 'idris2-compat)
+;;; idris2-compat.el ends here

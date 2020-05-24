@@ -1,5 +1,5 @@
 ;;; -*- lexical-binding: t -*-
-;;; idris-log.el --- Logging of Idris
+;;; idris2-log.el --- Logging of Idris2
 
 ;; Copyright (C) 2013-2014 Hannes Mehnert and David Raymond Christiansen
 
@@ -24,70 +24,70 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-(require 'idris-core)
-(require 'idris-common-utils)
+(require 'idris2-core)
+(require 'idris2-common-utils)
 
-(defvar idris-log-buffer-name (idris-buffer-name :log)
-  "The name of the Idris log buffer.")
+(defvar idris2-log-buffer-name (idris2-buffer-name :log)
+  "The name of the Idris2 log buffer.")
 
-(defface idris-log-timestamp-face
+(defface idris2-log-timestamp-face
   '((t :foreground "#211ab0"
        :weight bold))
-  "The face used for timestamps in the Idris log"
-  :group 'idris-faces)
+  "The face used for timestamps in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-face
+(defface idris2-log-level-face
   '((t :weight bold))
-  "General properties for displaying Idris log levels"
-  :group 'idris-faces)
+  "General properties for displaying Idris2 log levels"
+  :group 'idris2-faces)
 
-(defface idris-log-level-1-face
+(defface idris2-log-level-1-face
   '((t :foreground "#ff0011"))
-  "The face used for log level 1 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log level 1 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-2-face
+(defface idris2-log-level-2-face
   '((t :foreground "#dd0033"))
-  "The face used for log level 2 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log level 2 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-3-face
+(defface idris2-log-level-3-face
   '((t :foreground "#bb0055"))
-  "The face used for log level 3 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log level 3 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-4-face
+(defface idris2-log-level-4-face
   '((t :foreground "#990077"))
-  "The face used for log level 4 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log level 4 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-5-face
+(defface idris2-log-level-5-face
   '((t :foreground "#770099"))
-  "The face used for log level 5 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log level 5 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defface idris-log-level-higher-face
+(defface idris2-log-level-higher-face
   '((t :foreground "#550099"))
-  "The face used for log levels over 5 in the Idris log"
-  :group 'idris-faces)
+  "The face used for log levels over 5 in the Idris2 log"
+  :group 'idris2-faces)
 
-(defun idris-get-log-level-face (level)
-  (cond ((= level 1) 'idris-log-level-1-face)
-        ((= level 2) 'idris-log-level-2-face)
-        ((= level 3) 'idris-log-level-3-face)
-        ((= level 4) 'idris-log-level-4-face)
-        ((= level 5) 'idris-log-level-5-face)
-        (t 'idris-log-level-higher-face)))
+(defun idris2-get-log-level-face (level)
+  (cond ((= level 1) 'idris2-log-level-1-face)
+        ((= level 2) 'idris2-log-level-2-face)
+        ((= level 3) 'idris2-log-level-3-face)
+        ((= level 4) 'idris2-log-level-4-face)
+        ((= level 5) 'idris2-log-level-5-face)
+        (t 'idris2-log-level-higher-face)))
 
-(defvar idris-log-mode-map
+(defvar idris2-log-mode-map
   (let ((map (make-keymap)))
     (suppress-keymap map) ; remove self-inserting char commands
     map))
 
-(define-derived-mode idris-log-mode fundamental-mode "Idris Log"
-  "Major mode used to show Idris compiler internals logs
-      \\{idris-log-mode-map}
-Invokes `idris-log-mode-hook'."
+(define-derived-mode idris2-log-mode fundamental-mode "Idris2 Log"
+  "Major mode used to show Idris2 compiler internals logs
+      \\{idris2-log-mode-map}
+Invokes `idris2-log-mode-hook'."
   (buffer-disable-undo)
   (set (make-local-variable 'outline-regexp) "^(")
   (set (make-local-variable 'comment-start) ";")
@@ -96,24 +96,24 @@ Invokes `idris-log-mode-hook'."
   (setq buffer-read-only t)
   (view-mode 1))
 
-(defun idris-log-buffer ()
+(defun idris2-log-buffer ()
   "Return or create the log buffer."
-  (or (get-buffer idris-log-buffer-name)
-      (let ((buffer (get-buffer-create idris-log-buffer-name)))
+  (or (get-buffer idris2-log-buffer-name)
+      (let ((buffer (get-buffer-create idris2-log-buffer-name)))
         (with-current-buffer buffer
-          (idris-log-mode))
+          (idris2-log-mode))
         buffer)))
 
-(defun idris-log (level message)
+(defun idris2-log (level message)
   "Record the fact that MESSAGE occured."
   ;; TODO: Different faces for different log levels
-  (with-current-buffer (idris-log-buffer)
+  (with-current-buffer (idris2-log-buffer)
     (goto-char (point-max))
     (let* ((buffer-read-only nil)
            (time (format-time-string "%Y-%m-%d %H:%M:%S"))
-           (meta-info (concat (propertize time 'face 'idris-log-timestamp-face)
+           (meta-info (concat (propertize time 'face 'idris2-log-timestamp-face)
                               (propertize (format "%2s" level)
-                                          'face (idris-get-log-level-face level))))
+                                          'face (idris2-get-log-level-face level))))
            (meta (propertize " "
                              'display `((margin left-margin)
                                         ,meta-info))))
@@ -123,11 +123,11 @@ Invokes `idris-log-mode-hook'."
         (insert "\n")))
     (goto-char (point-max))))
 
-(defun idris-log-hook-function (event)
+(defun idris2-log-hook-function (event)
   (pcase event
     (`(:log (,level ,message) ,_target)
-     (idris-log level message)
+     (idris2-log level message)
      t)
     (_ nil)))
 
-(provide 'idris-log)
+(provide 'idris2-log)

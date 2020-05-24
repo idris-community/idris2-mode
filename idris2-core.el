@@ -1,4 +1,4 @@
-;;; idris-core.el --- Core functionality -*- lexical-binding: t -*-
+;;; idris2-core.el --- Core functionality -*- lexical-binding: t -*-
 ;; Copyright (C) 2013 Hannes Mehnert
 
 ;; Authors: Hannes Mehnert <hannes@mehnert.org>
@@ -24,13 +24,13 @@
 ;; Boston, MA 02111-1307, USA.
 
 ;;; Code:
-(require 'idris-compat)
+(require 'idris2-compat)
 
-(defun idris-is-ident-char-p (ch)
+(defun idris2-is-ident-char-p (ch)
   (or (and (<= ?a ch) (<= ch ?z))
       (and (<= ?A ch) (<= ch ?Z))
       (and (<= ?0 ch) (<= ch ?9))
       (= ch ?_)))
 
-(provide 'idris-core)
-;;; idris-core.el ends here
+(provide 'idris2-core)
+;;; idris2-core.el ends here
