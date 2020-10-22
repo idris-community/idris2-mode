@@ -78,13 +78,15 @@
     ["Quit inferior idris2 process" idris2-quit t]
     "-----------------"
     ["Add initial match clause to type declaration" idris2-add-clause t]
-    ["Add missing cases" idris2-add-missing t]
+    ;;co: not in Idris2 yet
+    ;;["Add missing cases" idris2-add-missing t]
     ["Case split pattern variable" idris2-case-split t]
     ["Add with block" idris2-make-with-block t]
     ["Extract lemma from hole" idris2-make-lemma t]
     ["Solve hole with case expression" idris2-make-cases-from-hole t]
     ["Attempt to solve hole" idris2-proof-search t]
     ["Display type" idris2-type-at-point t]
+    ["Goto definition" idris2-jump-to-def t]
     "-----------------"
     ["Open package" idris2-open-package-file t]
     ["Build package" idris2-ipkg-build t]

@@ -349,6 +349,28 @@ compiler-annotated output. Does not return a line number."
       (idris2-show-info (format "%s" result) formatting)))
 
 
+(defun idris2-jump-to-def ()
+  "Moves cursor to the definition of type at point"
+  (interactive)
+  (let ((name (idris2-name-at-point)))
+    (if (null name)
+	(user-error "No symbol under cursor")
+      (let ((locs (idris2-eval (list :def-loc name))))
+	 (if (null locs)
+	     (user-error "Symbol not found")
+	   (let* ((first-loc (car (car locs)))
+		  (file (nth 0 first-loc))
+		  (line (nth 0 (nth 1 first-loc)))
+		  (col (1- (nth 1 (nth 1 first-loc))))
+		  )
+	     (idris2-show-source-location file line col)
+	     )
+	   )
+	 )
+      )
+    )
+  )
+
 (defun idris2-type-at-point (thing)
   "Display the type of the name at point, considered as a global variable"
   (interactive "P")
@@ -533,11 +555,8 @@ KILLFLAG is set if N was explicitly specified."
 
 (defun idris2-docs-at-point (thing)
   "Display the internal documentation for the name at point, considered as a global variable"
-  (interactive "P")
-  (let ((name (if thing (read-string "Docs: ")
-                (idris2-name-at-point))))
-    (when name
-      (idris2-info-for-name :docs-for name))))
+  (interactive)
+  (message "Not implemented yet"))
 
 (defun idris2-eldoc-lookup ()
   "Support for showing type signatures in the modeline when there's a running Idris2"
@@ -639,12 +658,8 @@ KILLFLAG is set if N was explicitly specified."
 (defun idris2-add-missing ()
   "Add missing cases"
   (interactive)
-  (let ((what (idris2-thing-at-point)))
-    (when (car what)
-      (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:add-missing ,(cdr what) ,(car what))))))
-        (forward-line 1)
-        (insert result)))))
+  (message "No add-missing in Idris2 yet")
+  )
 
 (defun idris2-make-with-block ()
   "Add with block"
@@ -663,58 +678,36 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let* ((result (car (idris2-eval `(:make-lemma ,(cdr what) ,(car what)))))
-             (lemma-type (car result)))
-        ;; There are two cases here: either a ?hole, or the {name} of a provisional defn.
-        (cond ((equal lemma-type :metavariable-lemma)
-               (let ((lem-app (cadr (assoc :replace-metavariable (cdr result))))
-                     (type-decl (cadr (assoc :definition-type (cdr result)))))
-                 ;; replace the hole
-                 ;; assume point is on the hole right now!
-                 (while (not (looking-at "\\?[a-zA-Z0-9?_]+"))
-                   (backward-char 1))
-                 ;; now we're on the ? - we just matched the metavar
-                 (replace-match lem-app)
+      (let* ((type-decl (car (idris2-eval `(:make-lemma ,(cdr what) ,(car what))))))
+	(message "type-decl is %s" type-decl)
 
-                 ;; now we add the type signature - search upwards for the current
-                 ;; signature, then insert before it
-                 (re-search-backward (if (idris2-lidr-p)
-                                         "^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
-                                       "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
-                 (let ((indentation (match-string 1)) end-point)
-                   (beginning-of-line)
-                   (insert indentation)
-                   (setq end-point (point))
-                   (insert type-decl)
-                   (newline 2)
-                   ;; make sure point ends up ready to start a new pattern match
-                   (goto-char end-point))))
-              ((equal lemma-type :provisional-definition-lemma)
-               (let ((clause (cadr (assoc :definition-clause (cdr result)))))
-                 ;; Insert the definition just after the current definition
-                 ;; This can either be before the next type definition or at the end of
-                 ;; the buffer, if there is no next type definition
-                 (let ((next-defn-point
-                        (re-search-forward (if (idris2-lidr-p)
-                                               "^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
-                                             "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:") nil t)))
-                   (if next-defn-point ;; if we found a definition
-                       (let ((indentation (match-string 1)) end-point)
-                         (goto-char next-defn-point)
-                         (beginning-of-line)
-                         (insert indentation)
-                         (setq end-point (point))
-                         (insert clause)
-                         (newline 2)
-                         ;; make sure point is at new defn
-                         (goto-char end-point))
-                     ;; otherwise it goes at the end of the buffer
-                     (let ((end (point-max)))
-                       (goto-char end)
-                       (insert clause)
-                       (newline)
-                       ;; make sure point is at new defn
-                       (goto-char end)))))))))))
+	;; (let ((lem-app (cadr (assoc :replace-metavariable (cdr result))))
+	;;       (type-decl (cadr (assoc :definition-type (cdr result)))))
+	;; replace the hole
+	;; assume point is on the hole right now!
+	(while (not (looking-at "\\?[a-zA-Z0-9?_]+"))
+	  (backward-char 1))
+
+	;; now we're on the ? - delete that character, that is the name of our lemma
+	(delete-char 1)
+
+	;; now we add the type signature - search upwards for the current
+	;; signature, then insert before it
+	(re-search-backward (if (idris2-lidr-p)
+				"^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
+			      "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
+	(let ((indentation (match-string 1)) end-point)
+	  (beginning-of-line)
+	  (insert indentation)
+	  (insert type-decl)
+	  (setq end-point (point)) ;; we want the point ready to type the definition of the lemma
+	  (newline 2)
+	  (goto-char end-point))
+	  )
+	)
+      )
+    )
+  )
 
 
 (defun idris2-compile-and-execute ()
@@ -728,42 +721,26 @@ KILLFLAG is set if N was explicitly specified."
 command to prompt for hints and recursion depth, while a numeric
 prefix argument sets the recursion depth directly."
   (interactive "P")
-  (let ((hints (if (consp arg)
-                   (split-string (read-string "Hints: ") "[^a-zA-Z0-9']")
-                 '()))
-        (depth (cond ((consp arg)
-                      (let ((input (string-to-number (read-string "Search depth: "))))
-                        (if (= input 0)
-                            nil
-                          (list input))))
-                     ((numberp arg)
-                      (list arg))
-                     (t nil)))
-        (what (idris2-thing-at-point)))
+  (let
+      ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:proof-search ,(cdr what) ,(car what) ,hints ,@depth)))))
-        (if (string= result "")
-            (error "Nothing found")
-          (save-excursion
-            (let ((start (progn (search-backward "?") (point)))
-                  (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-              (delete-region start end))
-            (insert result)))))))
+      (let ((result (car (idris2-eval `(:proof-search ,(cdr what) ,(car what))))))
+	(if (string= result "")
+	    (error "Nothing found")
+	  (save-excursion
+	    (let ((start (progn (search-backward "?") (point)))
+		  (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+	      (delete-region start end))
+	    (insert result)))))
+    )
+  )
 
 (defun idris2-refine (name)
   "Refine by some NAME, without recursive proof search."
-  (interactive "MRefine by: ")
-  (let ((what (idris2-thing-at-point)))
-    (unless (car what)
-      (error "Could not find a hole at point to refine by"))
-    (save-excursion (idris2-load-file-sync))
-    (let ((result (car (idris2-eval `(:refine ,(cdr what) ,(car what) ,name)))))
-      (save-excursion
-        (let ((start (progn (search-backward "?") (point)))
-              (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-          (delete-region start end))
-        (insert result)))))
+  (interactive)
+  (message "No refine in Idris2 yet!")
+)
 
 (defun idris2-identifier-backwards-from-point ()
   (let (identifier-start
@@ -1168,7 +1145,8 @@ of the term to replace."
                              "infinite"))))
     (when (and idris2-process
                (not idris2-prover-currently-proving))
-      (idris2-eval `(:interpret ,command) t))))
+      ;; (idris2-eval `(:interpret ,command) t) TIMHACK
+     ))) 
 
 ;;; Computing a menu with these commands
 (defun idris2-context-menu-items (plist)

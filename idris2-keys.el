@@ -54,12 +54,14 @@
 (defun idris2-define-editing-keys (map)
   "Define the keys related to editing Idris2 code in the keymap MAP."
   (define-key map (kbd "C-c C-c") 'idris2-case-dwim)
-  (define-key map (kbd "C-c C-m") 'idris2-add-missing)
+  ;; co: not in Idris2 yet
+  ;; (define-key map (kbd "C-c C-m") 'idris2-add-missing)
   (define-key map (kbd "C-c C-e") 'idris2-make-lemma)
   (define-key map (kbd "C-c C-s") 'idris2-add-clause)
   (define-key map (kbd "C-c C-w") 'idris2-make-with-block)
   (define-key map (kbd "C-c C-a") 'idris2-proof-search)
-  (define-key map (kbd "C-c C-r") 'idris2-refine)
+  ;; co: not in Idris2 yet
+  ;; (define-key map (kbd "C-c C-r") 'idris2-refine)
   (define-key map (kbd "RET") 'idris2-newline-and-indent)
   ;; Not using `kbd' due to oddness about backspace and delete
   (define-key map [delete] 'idris2-delete-forward-char)
@@ -108,7 +110,8 @@
                                   "l" 'idris2-make-lemma
                                   "c" 'idris2-case-split
                                   "w" 'idris2-make-with-block
-                                  "m" 'idris2-add-missing
+                                  ;; co: Not in idris2 yet
+                                  ;; "m" 'idris2-add-missing
                                   "p" 'idris2-proof-search
                                   "h" 'idris2-docs-at-point)))
 
