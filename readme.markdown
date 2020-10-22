@@ -14,7 +14,7 @@ Then in your `~/.emacs.d/init.el` file, add:
 (require 'idris2-mode)
 ```
 
-## Here is what works:
+Here is what works so far:
 ```
 M-n		idris2-next-error
 M-p		idris2-previous-error
