@@ -5,8 +5,9 @@ This is an emacs mode for editing Idris2 code.
 It's a copy of (https://github.com/idris-hackers/idris-mode) mostly, for working with Idris2 in its present state. See that readme for more details.
 
 Install it by running within your `~/.emacs.d` directory:
-
-git clone https://github.com/redfish64/idris2-mode
+```
+$ git clone https://github.com/redfish64/idris2-mode
+```
 
 Then in your `~/.emacs.d/init.el` file, add:
 ```
