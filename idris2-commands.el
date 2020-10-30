@@ -44,6 +44,7 @@
 
 (require 'cl-lib)
 (require 'thingatpt)
+(require 'xref)
 
 (defvar-local idris2-load-to-here nil
   "The maximum position to load")
@@ -310,13 +311,13 @@ Idris2 process. This sets the load position to point, if there is one."
       (1+ (count-lines 1 (point))))))
 
 
-(defun idris2-thing-at-point ()
-  "Return the line number and name at point as a cons.
+(defun idris2-thing-at-point-raw ()
+  "Return the line number and name at point as a cons or nil otherwise.
 Use this in Idris2 source buffers."
   (let ((line (idris2-get-line-num)))
     (cons
      (if (equal (syntax-after (point))
-                (string-to-syntax "."))
+                (string-to-syntax ".")) ;; TODO 2 this should be replaced with idris2 operator characters
          ;; We're on an operator.
          (save-excursion
            (skip-syntax-backward ".")
@@ -324,9 +325,18 @@ Use this in Idris2 source buffers."
              (skip-syntax-forward ".")
              (buffer-substring-no-properties beg (point))))
        ;; Try if we're on a symbol or fail otherwise.
-       (or (current-word t)
-           (error "Nothing identifiable under point")))
+       (current-word t)
+       )
      line)))
+
+(defun idris2-thing-at-point (&optional prompt)
+  "Return the line number and name at point as a cons, prompting if no symbol
+Use this in Idris2 source buffers."
+  (let ((v (idris2-thing-at-point-raw)))
+    (if (car v)
+	v
+      (cons (read-string (or prompt "Enter symbol: ")) (cdr v)))))
+
 
 (defun idris2-name-at-point ()
   "Return the name at point, taking into account semantic
@@ -350,23 +360,23 @@ compiler-annotated output. Does not return a line number."
 
 
 (defun idris2-jump-to-def ()
-  "Moves cursor to the definition of type at point"
+  "moves cursor to the definition of type at point"
   (interactive)
-  (let ((name (idris2-name-at-point)))
-    (if (null name)
-	(user-error "No symbol under cursor")
-      (let ((locs (idris2-eval (list :name-at name))))
-	 (if (null locs)
-	     (user-error "Symbol not found")
-	   (let* ((first-loc (car (car locs)))
-		  (file (nth 1 first-loc))
-		  (line (1+ (nth 2 first-loc))))
-		  (col (nth 3 first-loc))
-		  )
-	     (idris2-show-source-location file line col)
+  (let* ((name (car (idris2-thing-at-point)))
+         (locs (idris2-eval (list :name-at name))))
+    (if (null (car locs))
+	(user-error "symbol '%s' not found" name)
+      (let* ((first-loc (car (car locs)))
+	     (file (nth 1 first-loc))
+	     (line (1+ (nth 2 first-loc)))
+	     (col (nth 3 first-loc))
 	     )
-	   )
-	 )
+	(xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
+				 ;; also does this and it seems appropriate,
+				 ;; allows the user to pop the tag and go
+				 ;; back to the previous point.
+	(idris2-show-source-location file line col)
+	)
       )
     )
   )

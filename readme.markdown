@@ -34,4 +34,17 @@ C-c C-b TAB	idris2-ipkg-install
 C-c C-b C-p	idris2-open-package-file
 C-c C-d C-d	idris2-docs-at-point
 C-c C-d C-t	idris2-type-search
+<unmapped>  idris2-jump-to-def
 ```
+
+Note, if you use evil-mode, you'll probably want to use this to
+prevent a huge lag when editing files, seehttps://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
+
+;;Fixes lag when editing idris code with evil
+(defun ~/evil-motion-range--wrapper (fn &rest args)
+  "Like `evil-motion-range', but override field-beginning for performance.
+See URL `https://github.com/ProofGeneral/PG/issues/427'."
+  (cl-letf (((symbol-function 'field-beginning)
+             (lambda (&rest args) 1)))
+    (apply fn args)))
+(advice-add #'evil-motion-range :around #'~/evil-motion-range--wrapper)
