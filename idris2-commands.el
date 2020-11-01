@@ -359,23 +359,74 @@ compiler-annotated output. Does not return a line number."
       (idris2-show-info (format "%s" result) formatting)))
 
 
+(defun idris2-jump-to-def-helper (loc)
+  "jumps to specified definition"
+  (let* ((file (nth 1 loc))
+	 (line (1+ (nth 2 loc)))
+	 (col (nth 3 loc))
+	 )
+    (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
+    ;; also does this and it seems appropriate, allows the user to pop
+    ;; the tag and go back to the previous point. (pop-tag-mark
+    ;; default Ctl-t)
+
+    (if (file-exists-p (idris2-get-fullpath-from-idris2-file file))
+	(idris2-show-source-location file line col)
+      (user-error "Source not found for %s" file)a)
+    )
+  )
+
+(defun button-pressed (button)
+  (message (format "Button pressed!")))
+
+;; (defun bp2 (text button)
+;;   (message (format "Button pressed2! %s" text)))
+
+(define-button-type 'custom-button
+  'action 'button-pressed
+  'follow-link t
+  'help-echo "Click Button"
+  'help-args "test")
+
+;; (insert-button "foo!" :type 'custom-button 'action (apply-partially 'bp2 "fee"))
+
+(defun idris2-show-jump-choices (locs)
+  (with-current-buffer (idris2-info-buffer)
+    (setq buffer-read-only t)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (dolist (loc (reverse locs))
+	(let* ((name (nth 0 loc))
+	       (file (nth 1 loc))
+	       (line (1+ (nth 2 loc)))
+	       (col (nth 3 loc))
+	       (fullpath (idris2-get-fullpath-from-idris2-file file))
+	       )
+	  (if (file-exists-p fullpath)
+	      (insert-button name 'follow-link t 'button loc
+			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-def-helper loc)))
+	    (insert (format "%s (not found)" name)))
+	  (insert-char ?\n)
+	  (goto-char (point-min))
+	  )
+	)
+      )
+    (unless (idris2-info-buffer-visible-p)
+      (pop-to-buffer (idris2-info-buffer))
+      (message "Press q to close the Idris2 info buffer."))
+    )
+  )
+
 (defun idris2-jump-to-def ()
   "moves cursor to the definition of type at point"
   (interactive)
   (let* ((name (car (idris2-thing-at-point)))
-         (locs (idris2-eval (list :name-at name))))
-    (if (null (car locs))
+         (locs (car (idris2-eval (list :name-at name)))))
+    (if (null locs)
 	(user-error "symbol '%s' not found" name)
-      (let* ((first-loc (car (car locs)))
-	     (file (nth 1 first-loc))
-	     (line (1+ (nth 2 first-loc)))
-	     (col (nth 3 first-loc))
-	     )
-	(xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
-				 ;; also does this and it seems appropriate,
-				 ;; allows the user to pop the tag and go
-				 ;; back to the previous point.
-	(idris2-show-source-location file line col)
+      (if (null (cdr locs)) ;; only one choice
+	  (idris2-jump-to-def-helper (car locs))
+	(idris2-show-jump-choices locs)
 	)
       )
     )

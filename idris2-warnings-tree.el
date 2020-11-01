@@ -120,9 +120,14 @@ Invokes `idris2-compiler-notes-mode-hook'."
 (defun idris2-show-source-location (filename lineno col)
   (idris2-goto-source-location filename lineno col))
 
+(defun idris2-get-fullpath-from-idris2-file (filename)
+  "Returns the full filepath of a filename receives from the inferior idris2 process"
+  (concat (file-name-as-directory idris2-process-current-working-directory) filename)
+  )
+
 (defun idris2-goto-location (filename)
   "Opens buffer for filename"
-  (let ((fullpath (concat (file-name-as-directory idris2-process-current-working-directory)
+  (let ((fullpath (idris2-get-fullpath-from-idris2-file
                           filename)))
     (or (get-buffer filename)
         (get-file-buffer fullpath)
