@@ -68,6 +68,10 @@ Following the behavior of Emacs help buffers, the future is deleted."
 (defvar idris2-info-buffer-name (idris2-buffer-name :info)
   "The name of the buffer containing Idris2 help information")
 
+(defvar idris2-buffer-to-return-to-from-info-buffer
+  "The buffer that should be returned to when the info buffer is closed.")
+
+
 (defvar idris2-info-mode-map
   (let ((map (make-keymap)))
     (suppress-keymap map) ; remove the self-inserting char commands
@@ -104,15 +108,23 @@ Ensure that the buffer is in `idris2-info-mode'."
     buffer))
 
 (defun idris2-info-quit ()
+  "Exits the info window. Tries to go back to the previous window and buffer before it was opened."
   (interactive)
-  (idris2-kill-buffer idris2-info-buffer-name))
+  (idris2-kill-buffer idris2-info-buffer-name)
+  (if (and idris2-buffer-to-return-to-from-info-buffer (buffer-live-p idris2-buffer-to-return-to-from-info-buffer))
+      (pop-to-buffer idris2-buffer-to-return-to-from-info-buffer `(display-buffer-reuse-window))
+    ()
+    )
+  (setq idris2-buffer-to-return-to-from-info-buffer nil) 
+  )
 
 (defun idris2-info-buffer-visible-p ()
   (if (get-buffer-window idris2-info-buffer-name 'visible) t nil))
 
 (defun idris2-info-show ()
-  "Show the Idris2 info buffer."
+  "Show the Idris2 info buffer. Updates idris2-buffer-to-return-to-from-info-buffer to current buffer"
   (interactive)
+  (setq idris2-buffer-to-return-to-from-info-buffer (current-buffer))
   (with-current-buffer (idris2-info-buffer)
     (setq buffer-read-only t)
     (pcase-let ((inhibit-read-only t)

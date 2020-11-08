@@ -117,8 +117,8 @@ Invokes `idris2-compiler-notes-mode-hook'."
           (t
            (idris2-show-source-location (nth 0 note) (nth 1 note) (nth 2 note))))))
 
-(defun idris2-show-source-location (filename lineno col)
-  (idris2-goto-source-location filename lineno col))
+(defun idris2-show-source-location (filename lineno col &optional is-same-window)
+  (idris2-goto-source-location filename lineno col is-same-window))
 
 (defun idris2-get-fullpath-from-idris2-file (filename)
   "Returns the full filepath of a filename receives from the inferior idris2 process"
@@ -129,17 +129,20 @@ Invokes `idris2-compiler-notes-mode-hook'."
   "Opens buffer for filename"
   (let ((fullpath (idris2-get-fullpath-from-idris2-file
                           filename)))
-    (or (get-buffer filename)
-        (get-file-buffer fullpath)
-        (find-file-noselect fullpath))))
+    (if (file-exists-p fullpath)
+      (or (get-buffer filename)
+	  (get-file-buffer fullpath)
+	  (find-file-noselect fullpath)))
+    )
+  )
 
-(defun idris2-goto-source-location (filename lineno col)
+(defun idris2-goto-source-location (filename lineno col is-same-window)
   "Move to the source location FILENAME LINENO COL. If the buffer
 containing the file is narrowed and the location is hidden, show
 a preview and offer to widen."
   (let ((buf (idris2-goto-location filename)))
     (set-buffer buf)
-    (pop-to-buffer buf t)
+    (pop-to-buffer buf (if is-same-window '(display-buffer-same-window) t))
     (pcase-let* ((old-start (point-min)) ; The start and end taking
                  (old-end (point-max))   ; narrowing into account
                  (`(,new-location . ,widen-p)
