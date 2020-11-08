@@ -38,8 +38,9 @@ C-c C-d C-t	idris2-type-search
 ```
 
 Note, if you use evil-mode, you'll probably want to use this to
-prevent a huge lag when editing files, seehttps://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
+prevent a huge lag when editing files, see https://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
 
+```
 ;;Fixes lag when editing idris code with evil
 (defun ~/evil-motion-range--wrapper (fn &rest args)
   "Like `evil-motion-range', but override field-beginning for performance.
@@ -48,3 +49,4 @@ See URL `https://github.com/ProofGeneral/PG/issues/427'."
              (lambda (&rest args) 1)))
     (apply fn args)))
 (advice-add #'evil-motion-range :around #'~/evil-motion-range--wrapper)
+```
