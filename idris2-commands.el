@@ -793,7 +793,7 @@ prefix argument sets the recursion depth directly."
       ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:proof-search ,(cdr what) ,(car what))))))
+      (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
 	(if (string= result "")
 	    (error "Nothing found")
 	  (save-excursion
