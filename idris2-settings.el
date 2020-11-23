@@ -40,6 +40,11 @@
   :type '(repeat string)
   :group 'idris2)
 
+(defcustom idris2-source-location '()
+  "Location of idris2 source. This is used for finding definitions of idris2 symbols in libraries included with idris2 itself (prelude, base, contrib) for use with idris2-jump-to-def, etc."
+  :type 'file
+  :group 'idris2)
+
 (defcustom idris2-warnings-printing (list 'warnings-tree)
   "How to print warnings: tree view ('warnings-tree) in REPL ('warnings-repl)"
   :group 'idris2

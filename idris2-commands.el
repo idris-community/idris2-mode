@@ -312,30 +312,31 @@ Idris2 process. This sets the load position to point, if there is one."
 
 
 (defun idris2-thing-at-point-raw ()
-  "Return the line number and name at point as a cons or nil otherwise.
-Use this in Idris2 source buffers."
-  (let ((line (idris2-get-line-num)))
-    (cons
-     (if (equal (syntax-after (point))
-                (string-to-syntax ".")) ;; TODO 2 this should be replaced with idris2 operator characters
-         ;; We're on an operator.
-         (save-excursion
-           (skip-syntax-backward ".")
-           (let ((beg (point)))
-             (skip-syntax-forward ".")
-             (buffer-substring-no-properties beg (point))))
-       ;; Try if we're on a symbol or fail otherwise.
-       (current-word t)
-       )
-     line)))
+  "Return the name at point, or nil otherwise. Use this in Idris2 source buffers."
+   (if (equal (syntax-after (point))
+	      (string-to-syntax ".")) ;; TODO 3 probably this should be replaced with idris2 operator characters
+       ;; We're on an operator.
+       (save-excursion
+	 (skip-syntax-backward ".")
+	 (let ((beg (point)))
+	   (skip-syntax-forward ".")
+	   (buffer-substring-no-properties beg (point))))
+     ;; Try if we're on a symbol or fail otherwise.
+     (current-word t)
+     )
+  )
 
 (defun idris2-thing-at-point (&optional prompt)
-  "Return the line number and name at point as a cons, prompting if no symbol
+  "Return the name, line, and column number at point as a list. If prompt is t then
+will prompt user if no symbol is there, and return what was entered by the user along with
+the line and col number. Otherwise, will return nil for whole list.
 Use this in Idris2 source buffers."
-  (let ((v (idris2-thing-at-point-raw)))
-    (if (car v)
-	v
-      (cons (read-string (or prompt "Enter symbol: ")) (cdr v)))))
+
+  (let ((name (or (idris2-thing-at-point-raw) (and prompt (read-string "Enter symbol: " nil)))))
+    (if name
+	(list name (idris2-get-line-num) (current-column)) nil)
+    )
+  )
 
 
 (defun idris2-name-at-point ()
@@ -358,8 +359,7 @@ compiler-annotated output. Does not return a line number."
              (formatting (cdr ty)))
       (idris2-show-info (format "%s" result) formatting)))
 
-
-(defun idris2-jump-to-def-helper (loc)
+(defun idris2-jump-to-def-helper (loc is-same-window)
   "jumps to specified definition"
   (let* ((file (nth 1 loc))
 	 (line (1+ (nth 2 loc)))
@@ -369,10 +369,11 @@ compiler-annotated output. Does not return a line number."
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
-
     (if (file-exists-p (idris2-get-fullpath-from-idris2-file file))
-	(idris2-show-source-location file line col)
-      (user-error "Source not found for %s" file)a)
+	(let ((x 42))
+	  (idris2-show-source-location file line col is-same-window))
+      (user-error "Source not found for %s" file)
+      )
     )
   )
 
@@ -390,7 +391,10 @@ compiler-annotated output. Does not return a line number."
 
 ;; (insert-button "foo!" :type 'custom-button 'action (apply-partially 'bp2 "fee"))
 
-(defun idris2-show-jump-choices (locs)
+(defun idris2-show-jump-choices (locs is-same-window)
+  (unless (idris2-info-buffer-visible-p)
+    (idris2-info-show)
+    (message "Press q to close the Idris2 info buffer."))
   (with-current-buffer (idris2-info-buffer)
     (setq buffer-read-only t)
     (let ((inhibit-read-only t))
@@ -404,33 +408,36 @@ compiler-annotated output. Does not return a line number."
 	       )
 	  (if (file-exists-p fullpath)
 	      (insert-button name 'follow-link t 'button loc
-			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-def-helper loc)))
+			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-def-helper loc is-same-window)))
 	    (insert (format "%s (not found)" name)))
 	  (insert-char ?\n)
 	  (goto-char (point-min))
 	  )
 	)
       )
-    (unless (idris2-info-buffer-visible-p)
-      (pop-to-buffer (idris2-info-buffer))
-      (message "Press q to close the Idris2 info buffer."))
     )
   )
 
-(defun idris2-jump-to-def ()
+(defun idris2-jump-to-def (&optional is-same-window)
   "moves cursor to the definition of type at point"
   (interactive)
-  (let* ((name (car (idris2-thing-at-point)))
+  (let* ((name (car (idris2-thing-at-point t)))
          (locs (car (idris2-eval (list :name-at name)))))
     (if (null locs)
 	(user-error "symbol '%s' not found" name)
       (if (null (cdr locs)) ;; only one choice
-	  (idris2-jump-to-def-helper (car locs))
-	(idris2-show-jump-choices locs)
+	  (idris2-jump-to-def-helper (car locs) is-same-window)
+	(idris2-show-jump-choices locs is-same-window)
 	)
       )
     )
   )
+
+(defun idris2-jump-to-def-same-window ()
+  "same as idris2-jump-to-def but uses same window (note: previous position can be restored using \\[pop-tag-mark]"
+  (interactive)
+  (idris2-jump-to-def t))
+
 
 (defun idris2-type-at-point (thing)
   "Display the type of the name at point, considered as a global variable"
@@ -655,7 +662,7 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:case-split ,(cdr what) ,(car what))))))
+      (let ((result (car (idris2-eval `(:case-split ,(cadr what) ,(car what))))))
         (if (<= (length result) 2)
             (message "Can't case split %s" (car what))
           (delete-region (line-beginning-position) (line-end-position))
@@ -667,7 +674,7 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:make-case ,(cdr what) ,(car what))))))
+      (let ((result (car (idris2-eval `(:make-case ,(cadr what) ,(car what))))))
         (if (<= (length result) 2)
             (message "Can't make cases from %s" (car what))
           (delete-region (line-beginning-position) (line-end-position))
@@ -688,11 +695,11 @@ KILLFLAG is set if N was explicitly specified."
         (command (if proof :add-proof-clause :add-clause)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(,command ,(cdr what) ,(car what)))))
+      (let ((result (car (idris2-eval `(,command ,(cadr what) ,(car what)))))
             final-point
             (prefix (save-excursion        ; prefix is the indentation to insert for the clause
                       (goto-char (point-min))
-                      (forward-line (1- (cdr what)))
+                      (forward-line (1- (cadr what)))
                       (goto-char (line-beginning-position))
                       (re-search-forward "\\(^>?\\s-*\\)" nil t)
                       (let ((prefix (match-string 1)))
@@ -728,7 +735,7 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:make-with ,(cdr what) ,(car what))))))
+      (let ((result (car (idris2-eval `(:make-with ,(cadr what) ,(car what))))))
         (beginning-of-line)
         (kill-line)
         (insert result)))))
@@ -739,7 +746,7 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let* ((type-decl (car (idris2-eval `(:make-lemma ,(cdr what) ,(car what))))))
+      (let* ((type-decl (car (idris2-eval `(:make-lemma ,(cadr what) ,(car what))))))
 	(message "type-decl is %s" type-decl)
 
 	;; (let ((lem-app (cadr (assoc :replace-metavariable (cdr result))))
@@ -786,7 +793,7 @@ prefix argument sets the recursion depth directly."
       ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:proof-search ,(cdr what) ,(car what))))))
+      (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
 	(if (string= result "")
 	    (error "Nothing found")
 	  (save-excursion

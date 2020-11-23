@@ -35,6 +35,7 @@ C-c C-b C-p	idris2-open-package-file
 C-c C-d C-d	idris2-docs-at-point
 C-c C-d C-t	idris2-type-search
 <unmapped>  idris2-jump-to-def
+<unmapped>  idris2-jump-to-def-same-window
 ```
 
 Note, if you use evil-mode, you'll probably want to use this to
