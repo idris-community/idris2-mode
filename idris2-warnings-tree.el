@@ -125,22 +125,19 @@ Invokes `idris2-compiler-notes-mode-hook'."
   (concat (file-name-as-directory idris2-process-current-working-directory) filename)
   )
 
-(defun idris2-goto-location (filename)
+(defun idris2-goto-location (fullpath)
   "Opens buffer for filename"
-  (let ((fullpath (idris2-get-fullpath-from-idris2-file
-                          filename)))
-    (if (file-exists-p fullpath)
-      (or (get-buffer filename)
-	  (get-file-buffer fullpath)
-	  (find-file-noselect fullpath)))
-    )
+  (if (file-exists-p fullpath)
+    (or (get-buffer fullpath)
+	(get-file-buffer fullpath)
+	(find-file-noselect fullpath)))
   )
 
-(defun idris2-goto-source-location (filename lineno col is-same-window)
-  "Move to the source location FILENAME LINENO COL. If the buffer
-containing the file is narrowed and the location is hidden, show
-a preview and offer to widen."
-  (let ((buf (idris2-goto-location filename)))
+(defun idris2-goto-source-location-full (fullpath lineno col is-same-window)
+  "Move to the source location FILENAME LINENO COL. Filename must
+be a full path. Otherwise works just like
+idris2-goto-source-location"
+  (let ((buf (idris2-goto-location fullpath)))
     (set-buffer buf)
     (pop-to-buffer buf (if is-same-window '(display-buffer-same-window) t))
     (pcase-let* ((old-start (point-min)) ; The start and end taking
@@ -162,6 +159,11 @@ a preview and offer to widen."
         (when widen-p (widen))
         (goto-char new-location)))))
 
+(defun idris2-goto-source-location (filename lineno col is-same-window)
+  "Move to the source location FILENAME LINENO COL. If the buffer
+containing the file is narrowed and the location is hidden, show
+a preview and offer to widen."
+  (idris2-goto-source-location-full (idris2-get-fullpath-from-idris2-file filename) lineno col is-same-window))
 
 ;;;;;; Tree Widget
 

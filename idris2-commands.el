@@ -343,14 +343,33 @@ Use this in Idris2 source buffers."
   "Return the name at point, taking into account semantic
 annotations. Use this in Idris2 source buffers or in
 compiler-annotated output. Does not return a line number."
-  (let ((ref (cl-remove-if
-              #'null
-              (cons (get-text-property (point) 'idris2-ref)
-                    (cl-loop for overlay in (overlays-at (point))
-                             collecting (overlay-get overlay 'idris2-ref))))))
-    (if (null ref)
+  ;; co: this isn't working right... pointer on function name and it goes to first argument.
+  ;;     TODO 2.9 not sure these overlays are appropriate in general, anyway. may rewrite with text properties
+  ;; (let ((ref (cl-remove-if
+  ;;             #'null
+  ;;             (cons (get-text-property (point) 'idris2-ref)
+  ;;                   (cl-loop for overlay in (overlays-at (point))
+  ;;                            collecting (overlay-get overlay 'idris2-ref))))))
+    ;; (if (null ref)
         (car (idris2-thing-at-point))
-      (car ref))))
+	;; (car ref))))
+	)
+
+(defun idris2-find-full-path (file)
+  "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
+ ;; (message "idris source locs is %s" idris2-source-locations)
+  (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
+	 (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file)) file-dirs))
+	 (act-full-filenames (seq-filter #'(lambda (f) (message "f is %s, fe is %s" f (file-exists-p f)) (file-exists-p f)) poss-full-filenames))
+	 )
+    (if (null act-full-filenames) nil
+      (progn
+       (if (not (null (cdr act-full-filenames)))
+	   (message "Multiple locations found for file '%s': %s" file act-full-filenames) ())
+       (car act-full-filenames)))
+    )
+  )
+	
 
 (defun idris2-info-for-name (what name)
   "Display the type for a name"
@@ -369,10 +388,11 @@ compiler-annotated output. Does not return a line number."
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
-    (if (file-exists-p (idris2-get-fullpath-from-idris2-file file))
-	(let ((x 42))
-	  (idris2-show-source-location file line col is-same-window))
-      (user-error "Source not found for %s" file)
+    (let ((full-paths (idris2-find-full-path file)))
+      (if full-path
+	  (idris2-goto-source-location-full full-path line col is-same-window)
+	(user-error "Source not found for %s" file)
+	)
       )
     )
   )
@@ -422,12 +442,12 @@ compiler-annotated output. Does not return a line number."
   "moves cursor to the definition of type at point"
   (interactive)
   (let* ((name (car (idris2-thing-at-point t)))
-         (locs (car (idris2-eval (list :name-at name)))))
-    (if (null locs)
+	 (res (car (idris2-eval (cons :name-at (cons name ()))))))
+    (if (null res)
 	(user-error "symbol '%s' not found" name)
-      (if (null (cdr locs)) ;; only one choice
-	  (idris2-jump-to-def-helper (car locs) is-same-window)
-	(idris2-show-jump-choices locs is-same-window)
+      (if (null (cdr res)) ;; only one choice
+	  (idris2-jump-to-def-helper (car res) is-same-window)
+	(idris2-show-jump-choices res is-same-window)
 	)
       )
     )
@@ -455,11 +475,30 @@ compiler-annotated output. Does not return a line number."
     (when name
       (idris2-info-for-name :print-definition name))))
 
+(defun idris2-who-calls-name-helper (collapse name-str children)
+  ;; (message "name-str is %s" name-str)
+  (make-idris2-tree
+   :item name-str
+   :highlighting nil
+   :collapsed-p collapse
+   :kids
+      #'(lambda () (mapcar #'(lambda (child) 
+			       (pcase-let* ((`(,cname ,ctimes-called) child)
+					    (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname))))))
+					    )
+				 (message "child is %s" child)
+				 (idris2-who-calls-name-helper t cname children-of-child)
+		    ;; (idris2-who-calls-name-helper t (format "%s (Called %d times)" cname ctimes-called) children-of-child))
+		   ))
+			   children))
+   :preserve-properties '(idris2-tt-tree))
+  )
+
 (defun idris2-who-calls-name (name)
   "Show the callers of NAME in a tree."
-  (let* ((callers (idris2-eval `(:who-calls ,name)))
-         (roots (mapcar #'(lambda (c) (idris2-caller-tree c :who-calls))
-                        (car callers))))
+  (let* ((response (car (idris2-eval `(:who-calls ,name))))
+	 (hack (message "response is %s" response))
+         (roots (mapcar #'(lambda (name-children) (apply 'idris2-who-calls-name-helper nil name-children)) response)))
     (if (not (null roots))
         (idris2-tree-info-show-multiple roots "Callers")
       (message "The name %s was not found." name))
@@ -467,10 +506,9 @@ compiler-annotated output. Does not return a line number."
 
 (defun idris2-who-calls-name-at-point (thing)
   (interactive "P")
-  (let ((name (if thing (read-string "Who calls: ")
-                (idris2-name-at-point))))
-    (when name
-      (idris2-who-calls-name name))))
+  (let ((name-loc (idris2-thing-at-point t)))
+    (idris2-who-calls-name (car name-loc)))
+  )
 
 (defun idris2-name-calls-who (name)
   "Show the callees of NAME in a tree."
@@ -512,11 +550,13 @@ compiler-annotated output. Does not return a line number."
       :collapsed-p t
       :kids (lambda ()
               (cl-mapcan #'(lambda (child)
-                             (let ((child-name (caar (idris2-eval `(,cmd ,(car child))))))
+                             (let* (
+				    (cmd-to-run (list cmd (car child))
+				    (child-name (car (idris2-eval `(,cmd ,(car child))))))
                                (if child-name
                                    (list (idris2-caller-tree child-name cmd))
                                  nil)))
-                         children))
+                         children)))
       :preserve-properties '(idris2-tt-tree)))
     (_ (error "failed to make tree from %s" caller))))
 

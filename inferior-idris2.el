@@ -328,6 +328,7 @@ versions cannot deal with that."
   "List of stack-tags of continuations waiting on the stack.")
 
 (autoload 'idris2-list-compiler-notes "idris2-warnings-tree.el")
+
 (defun idris2-eval (sexp &optional no-errors)
   "Evaluate EXPR on the inferior Idris2 and return the result,
 ignoring intermediate output. If `NO-ERRORS' is non-nil, don't

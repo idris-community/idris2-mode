@@ -40,9 +40,9 @@
   :type '(repeat string)
   :group 'idris2)
 
-(defcustom idris2-source-location '()
-  "Location of idris2 source. This is used for finding definitions of idris2 symbols in libraries included with idris2 itself (prelude, base, contrib) for use with idris2-jump-to-def, etc."
-  :type 'file
+(defcustom idris2-source-locations '()
+  "A hack to specify location(s) of idris2 source. This is used for finding definitions of idris2 symbols that are not in the current source path for use with idris2-jump-to-def, etc. (It's a hack because it should be related to the libraries included in the project being compiled, but it is not. If you switch projects, you will have to update this)"
+  :type '(repeat file)
   :group 'idris2)
 
 (defcustom idris2-warnings-printing (list 'warnings-tree)
