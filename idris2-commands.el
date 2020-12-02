@@ -357,10 +357,9 @@ compiler-annotated output. Does not return a line number."
 
 (defun idris2-find-full-path (file)
   "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
- ;; (message "idris source locs is %s" idris2-source-locations)
   (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
 	 (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file)) file-dirs))
-	 (act-full-filenames (seq-filter #'(lambda (f) (message "f is %s, fe is %s" f (file-exists-p f)) (file-exists-p f)) poss-full-filenames))
+	 (act-full-filenames (seq-filter #'file-exists-p poss-full-filenames))
 	 )
     (if (null act-full-filenames) nil
       (progn
@@ -378,38 +377,20 @@ compiler-annotated output. Does not return a line number."
              (formatting (cdr ty)))
       (idris2-show-info (format "%s" result) formatting)))
 
-(defun idris2-jump-to-def-helper (loc is-same-window)
-  "jumps to specified definition"
-  (let* ((file (nth 1 loc))
-	 (line (1+ (nth 2 loc)))
-	 (col (nth 3 loc))
-	 )
+(defun idris2-jump-to-location (loc is-same-window)
+  "jumps to specified location"
+  (pcase-let* ((`(,name ,file ,line ,col) loc)
+	       (full-path (idris2-find-full-path file)))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
-    (let ((full-paths (idris2-find-full-path file)))
-      (if full-path
-	  (idris2-goto-source-location-full full-path line col is-same-window)
-	(user-error "Source not found for %s" file)
-	)
+    (if full-path
+	(idris2-goto-source-location-full full-path (+ 1 line) col is-same-window)
+      (user-error "Source not found for %s" file)
       )
     )
   )
-
-(defun button-pressed (button)
-  (message (format "Button pressed!")))
-
-;; (defun bp2 (text button)
-;;   (message (format "Button pressed2! %s" text)))
-
-(define-button-type 'custom-button
-  'action 'button-pressed
-  'follow-link t
-  'help-echo "Click Button"
-  'help-args "test")
-
-;; (insert-button "foo!" :type 'custom-button 'action (apply-partially 'bp2 "fee"))
 
 (defun idris2-show-jump-choices (locs is-same-window)
   (unless (idris2-info-buffer-visible-p)
@@ -420,15 +401,12 @@ compiler-annotated output. Does not return a line number."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (dolist (loc (reverse locs))
-	(let* ((name (nth 0 loc))
-	       (file (nth 1 loc))
-	       (line (1+ (nth 2 loc)))
-	       (col (nth 3 loc))
-	       (fullpath (idris2-get-fullpath-from-idris2-file file))
-	       )
+	(pcase-let* ((`(,name ,file ,line ,col) loc)
+		     (fullpath (idris2-get-fullpath-from-idris2-file file))
+		     )
 	  (if (file-exists-p fullpath)
 	      (insert-button name 'follow-link t 'button loc
-			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-def-helper loc is-same-window)))
+			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-location loc is-same-window)))
 	    (insert (format "%s (not found)" name)))
 	  (insert-char ?\n)
 	  (goto-char (point-min))
@@ -438,19 +416,23 @@ compiler-annotated output. Does not return a line number."
     )
   )
 
-(defun idris2-jump-to-def (&optional is-same-window)
-  "moves cursor to the definition of type at point"
-  (interactive)
-  (let* ((name (car (idris2-thing-at-point t)))
-	 (res (car (idris2-eval (cons :name-at (cons name ()))))))
+(defun idris2-jump-to-def-name (name &optional is-same-window)
+  (let ((res (car (idris2-eval (cons :name-at (cons name ()))))))
     (if (null res)
 	(user-error "symbol '%s' not found" name)
       (if (null (cdr res)) ;; only one choice
-	  (idris2-jump-to-def-helper (car res) is-same-window)
+	  (idris2-jump-to-location (car res) is-same-window)
 	(idris2-show-jump-choices res is-same-window)
 	)
-      )
+     )
     )
+  )
+
+(defun idris2-jump-to-def (&optional is-same-window)
+  "moves cursor to the definition of type at point"
+  (interactive)
+  (let ((name (car (idris2-thing-at-point t))))
+    (idris2-jump-to-def-name name is-same-window))
   )
 
 (defun idris2-jump-to-def-same-window ()
@@ -475,18 +457,38 @@ compiler-annotated output. Does not return a line number."
     (when name
       (idris2-info-for-name :print-definition name))))
 
+(defun idris2-extract-location-from-name (str)
+  "given a string in the form '(name) (possibly 'implementation' at (filename):(startline):(startcol)--(endline):(endcol)', extracts filename, startline and startcol as a list or nil otherwise"
+  (let* ((index (string-match "\\([^ ]+\\) \\(?:implementation \\)?at \\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)--[0-9]+:[0-9]+$" str)))
+    (if (null index) nil
+      (progn
+	(let
+	    (
+	     (n (match-string 1 str))
+	     (fn (match-string 2 str))
+	     (ln (string-to-number (match-string 3 str)))
+	     (col (- (string-to-number (match-string 4 str)) 1))) ;; For some reason, ex. for col 0, Idris returns 0 as the column when using ':name-at' and 1 when printing to the user, so we subtract 1 to be consistent internally
+	(list n fn ln col)))
+      )
+    ))
+    
+    
+
 (defun idris2-who-calls-name-helper (collapse name-str children)
-  ;; (message "name-str is %s" name-str)
   (make-idris2-tree
-   :item name-str
+   :item ""
    :highlighting nil
    :collapsed-p collapse
+   :button (list name-str 'action #'(lambda (button)
+				      (let ((loc (idris2-extract-location-from-name name-str)))
+					(if loc
+					    (idris2-jump-to-location (loc nil)
+					  (idris2-jump-to-def-name name-str nil)))))
    :kids
       #'(lambda () (mapcar #'(lambda (child) 
 			       (pcase-let* ((`(,cname ,ctimes-called) child)
 					    (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname))))))
 					    )
-				 (message "child is %s" child)
 				 (idris2-who-calls-name-helper t cname children-of-child)
 		    ;; (idris2-who-calls-name-helper t (format "%s (Called %d times)" cname ctimes-called) children-of-child))
 		   ))
@@ -497,7 +499,6 @@ compiler-annotated output. Does not return a line number."
 (defun idris2-who-calls-name (name)
   "Show the callers of NAME in a tree."
   (let* ((response (car (idris2-eval `(:who-calls ,name))))
-	 (hack (message "response is %s" response))
          (roots (mapcar #'(lambda (name-children) (apply 'idris2-who-calls-name-helper nil name-children)) response)))
     (if (not (null roots))
         (idris2-tree-info-show-multiple roots "Callers")
