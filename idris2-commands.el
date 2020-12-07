@@ -494,7 +494,7 @@ compiler-annotated output. Does not return a line number."
 		   ))
 			   children))
    :preserve-properties '(idris2-tt-tree))
-  )
+  ))
 
 (defun idris2-who-calls-name (name)
   "Show the callers of NAME in a tree."
