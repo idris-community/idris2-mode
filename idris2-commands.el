@@ -402,7 +402,7 @@ compiler-annotated output. Does not return a line number."
       (erase-buffer)
       (dolist (loc (reverse locs))
 	(pcase-let* ((`(,name ,file ,line ,col) loc)
-		     (fullpath (idris2-get-fullpath-from-idris2-file file))
+		     (fullpath (idris2-find-full-path file))
 		     )
 	  (if (file-exists-p fullpath)
 	      (insert-button name 'follow-link t 'button loc
@@ -482,7 +482,7 @@ compiler-annotated output. Does not return a line number."
    :button (list name-str 'action #'(lambda (button)
 				      (let ((loc (idris2-extract-location-from-name name-str)))
 					(if loc
-					    (idris2-jump-to-location (loc nil)
+					    (idris2-jump-to-location (loc nil))
 					  (idris2-jump-to-def-name name-str nil)))))
    :kids
       #'(lambda () (mapcar #'(lambda (child) 
@@ -507,12 +507,14 @@ compiler-annotated output. Does not return a line number."
 
 (defun idris2-who-calls-name-at-point (thing)
   (interactive "P")
+  (xref-push-marker-stack)
   (let ((name-loc (idris2-thing-at-point t)))
     (idris2-who-calls-name (car name-loc)))
   )
 
 (defun idris2-name-calls-who (name)
   "Show the callees of NAME in a tree."
+  (xref-push-marker-stack)
   (let* ((callees (idris2-eval `(:calls-who ,name)))
          (roots (mapcar #'(lambda (c) (idris2-caller-tree c :calls-who)) (car callees))))
     (if (not (null roots))
