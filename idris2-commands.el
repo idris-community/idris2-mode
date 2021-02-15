@@ -85,7 +85,7 @@
 (defun idris2-switch-working-directory (new-working-directory)
   (unless (string= idris2-process-current-working-directory new-working-directory)
     (idris2-ensure-process-and-repl-buffer)
-    (idris2-eval `(:interpret ,(concat ":cd " new-working-directory)))
+    (idris2-eval `(:interpret ,(concat ":cd \"" new-working-directory "\"")))
     (setq idris2-process-current-working-directory new-working-directory)))
 
 (defun idris2-list-holes-on-load ()
@@ -482,7 +482,7 @@ compiler-annotated output. Does not return a line number."
    :button (list name-str 'action #'(lambda (button)
 				      (let ((loc (idris2-extract-location-from-name name-str)))
 					(if loc
-					    (idris2-jump-to-location (loc nil))
+					    (idris2-jump-to-location loc nil)
 					  (idris2-jump-to-def-name name-str nil)))))
    :kids
       #'(lambda () (mapcar #'(lambda (child) 
@@ -802,17 +802,22 @@ KILLFLAG is set if N was explicitly specified."
 	;; now we're on the ? - delete that character, that is the name of our lemma
 	(delete-char 1)
 
-	;; now we add the type signature - search upwards for the current
-	;; signature, then insert before it
-	(re-search-backward (if (idris2-lidr-p)
+	;; now we add the type signature - search upwards for the first blank line
+	;; and get the indentation of the line after it. Then insert before it, respecting indentation
+        (re-search-backward (if (idris2-lidr-p)
 				"^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
-			      "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
+                              "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
+
 	(let ((indentation (match-string 1)) end-point)
+	  (when (not (idris2-lidr-p))
+	    (re-search-backward "^\\s-*\n")) ;; to skip any comment before the definition, we find the preceding blank line
+	  (message "ind is '%s'" indentation)
+	  (newline 1)
 	  (beginning-of-line)
 	  (insert indentation)
 	  (insert type-decl)
 	  (setq end-point (point)) ;; we want the point ready to type the definition of the lemma
-	  (newline 2)
+	  (newline 1)
 	  (goto-char end-point)
 	  )
 	)
