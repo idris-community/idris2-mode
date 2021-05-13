@@ -368,7 +368,7 @@ compiler-annotated output. Does not return a line number."
        (car act-full-filenames)))
     )
   )
-	
+
 
 (defun idris2-info-for-name (what name)
   "Display the type for a name"
@@ -471,8 +471,8 @@ compiler-annotated output. Does not return a line number."
 	(list n fn ln col)))
       )
     ))
-    
-    
+
+
 
 (defun idris2-who-calls-name-helper (collapse name-str children)
   (make-idris2-tree
@@ -485,7 +485,7 @@ compiler-annotated output. Does not return a line number."
 					    (idris2-jump-to-location loc nil)
 					  (idris2-jump-to-def-name name-str nil)))))
    :kids
-      #'(lambda () (mapcar #'(lambda (child) 
+      #'(lambda () (mapcar #'(lambda (child)
 			       (pcase-let* ((`(,cname ,ctimes-called) child)
 					    (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname))))))
 					    )
@@ -1262,7 +1262,7 @@ of the term to replace."
     (when (and idris2-process
                (not idris2-prover-currently-proving))
       ;; (idris2-eval `(:interpret ,command) t) TIMHACK
-     ))) 
+     )))
 
 ;;; Computing a menu with these commands
 (defun idris2-context-menu-items (plist)

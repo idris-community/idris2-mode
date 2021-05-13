@@ -128,5 +128,3 @@ As of 20140807 (Idris2 0.9.14.1-git:abee538) (endline endcolumn) is mostly the s
     overlay))
 
 (provide 'idris2-warnings)
-
-
