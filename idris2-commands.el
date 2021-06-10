@@ -355,20 +355,20 @@ compiler-annotated output. Does not return a line number."
 	;; (car ref))))
 	)
 
-(defun idris2-find-full-path (file)
-  "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
-  (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
-	 (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file)) file-dirs))
-	 (act-full-filenames (seq-filter #'file-exists-p poss-full-filenames))
-	 )
-    (if (null act-full-filenames) nil
-      (progn
-       (if (not (null (cdr act-full-filenames)))
-	   (message "Multiple locations found for file '%s': %s" file act-full-filenames) ())
-       (car act-full-filenames)))
-    )
-  )
-	
+; (defun idris2-find-full-path (file)
+;   "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
+;   (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
+; 	 (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file)) file-dirs))
+; 	 (act-full-filenames (seq-filter #'file-exists-p poss-full-filenames))
+; 	 )
+;     (if (null act-full-filenames) nil
+;       (progn
+;        (if (not (null (cdr act-full-filenames)))
+; 	   (message "Multiple locations found for file '%s': %s" file act-full-filenames) ())
+;        (car act-full-filenames)))
+;     )
+;   )
+
 
 (defun idris2-info-for-name (what name)
   "Display the type for a name"
@@ -380,7 +380,7 @@ compiler-annotated output. Does not return a line number."
 (defun idris2-jump-to-location (loc is-same-window)
   "jumps to specified location"
   (pcase-let* ((`(,name ,file ,line ,col) loc)
-	       (full-path (idris2-find-full-path file)))
+	       (full-path file))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
@@ -402,7 +402,7 @@ compiler-annotated output. Does not return a line number."
       (erase-buffer)
       (dolist (loc (reverse locs))
 	(pcase-let* ((`(,name ,file ,line ,col) loc)
-		     (fullpath (idris2-find-full-path file))
+		     (fullpath file)
 		     )
 	  (if (file-exists-p fullpath)
 	      (insert-button name 'follow-link t 'button loc
@@ -471,8 +471,8 @@ compiler-annotated output. Does not return a line number."
 	(list n fn ln col)))
       )
     ))
-    
-    
+
+
 
 (defun idris2-who-calls-name-helper (collapse name-str children)
   (make-idris2-tree
@@ -485,7 +485,7 @@ compiler-annotated output. Does not return a line number."
 					    (idris2-jump-to-location loc nil)
 					  (idris2-jump-to-def-name name-str nil)))))
    :kids
-      #'(lambda () (mapcar #'(lambda (child) 
+      #'(lambda () (mapcar #'(lambda (child)
 			       (pcase-let* ((`(,cname ,ctimes-called) child)
 					    (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname))))))
 					    )
@@ -1262,7 +1262,7 @@ of the term to replace."
     (when (and idris2-process
                (not idris2-prover-currently-proving))
       ;; (idris2-eval `(:interpret ,command) t) TIMHACK
-     ))) 
+     )))
 
 ;;; Computing a menu with these commands
 (defun idris2-context-menu-items (plist)
