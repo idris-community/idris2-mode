@@ -197,7 +197,7 @@ syntax table won't support, such as characters."
 (defconst idris2-font-lock-keyword-regexp
   (regexp-opt (append idris2-definition-keywords
                       idris2-keywords)
-              'words)
+              'symbols)
   "A regexp for matching Idris2 keywords")
 
 (defun idris2-font-lock-literate-search (regexp lidr limit)
