@@ -789,41 +789,36 @@ KILLFLAG is set if N was explicitly specified."
   (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
-      (let* ((type-decl (car (idris2-eval `(:make-lemma ,(cadr what) ,(car what))))))
-	(message "type-decl is %s" type-decl)
+      (let* ((result (car (idris2-eval `(:make-lemma ,(cadr what) ,(car what)))))
+             (lemma-type (car result)))
+        ;; There are two cases here: either a ?hole, or the {name} of a provisional defn.
+        (cond ((equal lemma-type :metavariable-lemma)
+               (let ((lem-app (cadr (assoc :replace-metavariable (cdr result))))
+                     (type-decl (cadr (assoc :definition-type (cdr result)))))
+                 ;; replace the hole
+                 ;; assume point is on the hole right now!
+                 (while (not (looking-at "\\?[a-zA-Z0-9?_]+"))
+                   (backward-char 1))
+                 ;; now we're on the ? - we just matched the metavar
+                 (replace-match lem-app)
 
-	;; (let ((lem-app (cadr (assoc :replace-metavariable (cdr result))))
-	;;       (type-decl (cadr (assoc :definition-type (cdr result)))))
-	;; replace the hole
-	;; assume point is on the hole right now!
-	(while (not (looking-at "\\?[a-zA-Z0-9?_]+"))
-	  (backward-char 1))
-
-	;; now we're on the ? - delete that character, that is the name of our lemma
-	(delete-char 1)
-
-	;; now we add the type signature - search upwards for the first blank line
-	;; and get the indentation of the line after it. Then insert before it, respecting indentation
-        (re-search-backward (if (idris2-lidr-p)
-				"^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
-                              "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
-
-	(let ((indentation (match-string 1)) end-point)
-	  (when (not (idris2-lidr-p))
-	    (re-search-backward "^\\s-*\n")) ;; to skip any comment before the definition, we find the preceding blank line
-	  (message "ind is '%s'" indentation)
-	  (newline 1)
-	  (beginning-of-line)
-	  (insert indentation)
-	  (insert type-decl)
-	  (setq end-point (point)) ;; we want the point ready to type the definition of the lemma
-	  (newline 1)
-	  (goto-char end-point)
-	  )
-	)
-      )
-    )
-  )
+                 ;; now we add the type signature - search upwards for the current
+                 ;; signature, then insert before it
+                 (re-search-backward (if (idris2-lidr-p)
+                                         "^\\(>\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"
+                                       "^\\(\\s-*\\)\\(([^)]+)\\|\\w+\\)\\s-*:"))
+                 (let ((indentation (match-string 1)) end-point)
+                   (beginning-of-line)
+                   (insert indentation)
+                   (setq end-point (point))
+                   (insert type-decl)
+                   (newline 2)
+                   ;; make sure point ends up ready to start a new pattern match
+                   (goto-char end-point))))
+              ((equal lemma-type :provisional-definition-lemma)
+               (message
+"idris2-make-lemma: recieved an unsupported \
+'provisional-definition-lemma' response. Ignored.")))))))
 
 
 (defun idris2-compile-and-execute ()
