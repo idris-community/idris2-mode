@@ -314,13 +314,13 @@ Idris2 process. This sets the load position to point, if there is one."
 (defun idris2-thing-at-point-raw ()
   "Return the name at point, or nil otherwise. Use this in Idris2 source buffers."
    (if (equal (syntax-after (point))
-	      (string-to-syntax ".")) ;; TODO 3 probably this should be replaced with idris2 operator characters
+        (string-to-syntax ".")) ;; TODO 3 probably this should be replaced with idris2 operator characters
        ;; We're on an operator.
        (save-excursion
-	 (skip-syntax-backward ".")
-	 (let ((beg (point)))
-	   (skip-syntax-forward ".")
-	   (buffer-substring-no-properties beg (point))))
+   (skip-syntax-backward ".")
+   (let ((beg (point)))
+     (skip-syntax-forward ".")
+     (buffer-substring-no-properties beg (point))))
      ;; Try if we're on a symbol or fail otherwise.
      (current-word t)
      )
@@ -334,7 +334,7 @@ Use this in Idris2 source buffers."
 
   (let ((name (or (idris2-thing-at-point-raw) (and prompt (read-string "Enter symbol: " nil)))))
     (if name
-	(list name (idris2-get-line-num) (current-column)) nil)
+  (list name (idris2-get-line-num) (current-column)) nil)
     )
   )
 
@@ -352,8 +352,8 @@ compiler-annotated output. Does not return a line number."
   ;;                            collecting (overlay-get overlay 'idris2-ref))))))
     ;; (if (null ref)
         (car (idris2-thing-at-point))
-	;; (car ref))))
-	)
+  ;; (car ref))))
+  )
 
 (defun idris2-info-for-name (what name)
   "Display the type for a name"
@@ -371,7 +371,7 @@ compiler-annotated output. Does not return a line number."
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
     (if full-path
-	(idris2-goto-source-location-full full-path (+ 1 line) col is-same-window)
+  (idris2-goto-source-location-full full-path (+ 1 line) col is-same-window)
       (user-error "Source not found for %s" file)
       )
     )
@@ -404,11 +404,11 @@ compiler-annotated output. Does not return a line number."
 (defun idris2-jump-to-def-name (name &optional is-same-window)
   (let ((res (car (idris2-eval (cons :name-at (cons name ()))))))
     (if (null res)
-	(user-error "symbol '%s' not found" name)
+  (user-error "symbol '%s' not found" name)
       (if (null (cdr res)) ;; only one choice
-	  (idris2-jump-to-location (car res) is-same-window)
-	(idris2-show-jump-choices res is-same-window)
-	)
+    (idris2-jump-to-location (car res) is-same-window)
+  (idris2-show-jump-choices res is-same-window)
+  )
      )
     )
   )
@@ -447,13 +447,13 @@ compiler-annotated output. Does not return a line number."
   (let* ((index (string-match "\\([^ ]+\\) \\(?:implementation \\)?at \\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)--[0-9]+:[0-9]+$" str)))
     (if (null index) nil
       (progn
-	(let
-	    (
-	     (n (match-string 1 str))
-	     (fn (match-string 2 str))
-	     (ln (string-to-number (match-string 3 str)))
-	     (col (- (string-to-number (match-string 4 str)) 1))) ;; For some reason, ex. for col 0, Idris returns 0 as the column when using ':name-at' and 1 when printing to the user, so we subtract 1 to be consistent internally
-	(list n fn ln col)))
+  (let
+      (
+       (n (match-string 1 str))
+       (fn (match-string 2 str))
+       (ln (string-to-number (match-string 3 str)))
+       (col (- (string-to-number (match-string 4 str)) 1))) ;; For some reason, ex. for col 0, Idris returns 0 as the column when using ':name-at' and 1 when printing to the user, so we subtract 1 to be consistent internally
+  (list n fn ln col)))
       )
     ))
 
@@ -539,8 +539,8 @@ compiler-annotated output. Does not return a line number."
       :kids (lambda ()
               (cl-mapcan #'(lambda (child)
                              (let* (
-				    (cmd-to-run (list cmd (car child))
-				    (child-name (car (idris2-eval `(,cmd ,(car child))))))
+            (cmd-to-run (list cmd (car child))
+            (child-name (car (idris2-eval `(,cmd ,(car child))))))
                                (if child-name
                                    (list (idris2-caller-tree child-name cmd))
                                  nil)))
@@ -805,7 +805,6 @@ KILLFLAG is set if N was explicitly specified."
 "idris2-make-lemma: recieved an unsupported \
 'provisional-definition-lemma' response. Ignored.")))))))
 
-
 (defun idris2-compile-and-execute ()
   "Execute the program in the current buffer"
   (interactive)
@@ -822,13 +821,13 @@ prefix argument sets the recursion depth directly."
     (when (car what)
       (save-excursion (idris2-load-file-sync))
       (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
-	(if (string= result "")
-	    (error "Nothing found")
-	  (save-excursion
-	    (let ((start (progn (search-backward "?") (point)))
-		  (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-	      (delete-region start end))
-	    (insert result)))))
+  (if (string= result "")
+      (error "Nothing found")
+    (save-excursion
+      (let ((start (progn (search-backward "?") (point)))
+      (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+        (delete-region start end))
+      (insert result)))))
     )
   )
 
@@ -934,7 +933,10 @@ means to not ask for confirmation."
   (let* ((fname (buffer-file-name))
          (ibc (concat (file-name-sans-extension fname) ".ibc")))
     (if (not (or (string= (file-name-extension fname) "idr")
-                 (string= (file-name-extension fname) "lidr")))
+                 (string= (file-name-extension fname) "lidr")
+                 (string= (file-name-extension fname) "org")
+                 (string= (file-name-extension fname) "markdown")
+                 (string= (file-name-extension fname) "md")))
         (error "The current file is not an Idris2 file")
       (when (or no-confirmation (y-or-n-p (concat "Really delete " ibc "?")))
         (when (file-exists-p ibc)
