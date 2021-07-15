@@ -355,21 +355,6 @@ compiler-annotated output. Does not return a line number."
 	;; (car ref))))
 	)
 
-; (defun idris2-find-full-path (file)
-;   "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
-;   (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
-; 	 (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file)) file-dirs))
-; 	 (act-full-filenames (seq-filter #'file-exists-p poss-full-filenames))
-; 	 )
-;     (if (null act-full-filenames) nil
-;       (progn
-;        (if (not (null (cdr act-full-filenames)))
-; 	   (message "Multiple locations found for file '%s': %s" file act-full-filenames) ())
-;        (car act-full-filenames)))
-;     )
-;   )
-
-
 (defun idris2-info-for-name (what name)
   "Display the type for a name"
   (let* ((ty (idris2-eval (list what name)))

@@ -53,7 +53,8 @@
             (message "Press q to close, return or mouse on error to navigate to source")
             (setq buffer-read-only t)
             (goto-char (point-min))
-            notes))))))
+            notes
+            (display-buffer (idris2-buffer-name :notes))))))))
 
 (defvar idris2-tree-printer 'idris2-tree-default-printer)
 

@@ -115,7 +115,7 @@ Ensure that the buffer is in `idris2-info-mode'."
       (pop-to-buffer idris2-buffer-to-return-to-from-info-buffer `(display-buffer-reuse-window))
     ()
     )
-  (setq idris2-buffer-to-return-to-from-info-buffer nil) 
+  (setq idris2-buffer-to-return-to-from-info-buffer nil)
   )
 
 (defun idris2-info-buffer-visible-p ()
@@ -142,7 +142,8 @@ Ensure that the buffer is in `idris2-info-mode'."
       (goto-char (point-min))))
   (unless (idris2-info-buffer-visible-p)
     (pop-to-buffer (idris2-info-buffer))
-    (message "Press q to close the Idris2 info buffer.")))
+    (message "Press q to close the Idris2 info buffer."))
+  (pop-to-buffer idris2-buffer-to-return-to-from-info-buffer))
 
 (defmacro with-idris2-info-buffer (&rest cmds)
   "Execute `CMDS' in a fresh Idris2 info buffer, then display it to the user."
