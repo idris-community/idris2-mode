@@ -543,8 +543,8 @@ compiler-annotated output. Does not return a line number."
             (child-name (car (idris2-eval `(,cmd ,(car child))))))
                                (if child-name
                                    (list (idris2-caller-tree child-name cmd))
-                                 nil)))
-                         children)))
+                                 nil))))
+                         children))
       :preserve-properties '(idris2-tt-tree)))
     (_ (error "failed to make tree from %s" caller))))
 
