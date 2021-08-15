@@ -78,12 +78,12 @@
 
 (defun idris2-repl-get-logo ()
   "Return the path to the Idris2 logo if it exists, or `nil' if not."
-  (let ((logo-path-light (concat idris2-mode-path "logo-small.png"))
-        (logo-path-dark  (concat idris2-mode-path "logo-small-dark-contrast.png"))
-        (logo-path       (if (< (idris2-contrast-ratio-against-black
-                                 (idris2-get-bg-color))
-                                6.0)
-                             logo-path-dark
+  (let* ((logo-path-light (concat idris2-mode-path "logo-small.png"))
+          (logo-path-dark  (concat idris2-mode-path "logo-small-dark-contrast.png"))
+          (logo-path       (if (< (idris2-contrast-ratio-against-black
+                                   (idris2-get-bg-color))
+                                  6.0)
+                               logo-path-dark
                              logo-path-light)))
     (if (file-readable-p logo-path)
         logo-path
