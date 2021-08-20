@@ -694,7 +694,7 @@ KILLFLAG is set if N was explicitly specified."
         (if (<= (length result) 2)
             (message "Can't case split %s" (car what))
           (delete-region (line-beginning-position) (line-end-position))
-          (insert (substring result 0 (1- (length result)))))))))
+          (insert (substring result 0 (length result))))))))
 
 (defun idris2-make-cases-from-hole ()
   "Make a case expression from the metavariable at point."
