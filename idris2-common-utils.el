@@ -160,13 +160,10 @@ inserted text (that is, relative to point prior to insertion)."
          (err-face (if idris2-err
                        '(idris2-warning-face)
                      ()))
-         (text-face (pcase text-format
-                      (`(:text-formatting :bold)
-                       '(bold))
-                      (`(:text-formatting :italic)
-                       '(italic))
-                      (`(:text-formatting :underline)
-                       '(underline))
+         (text-face (pcase (cadr text-format)
+                      (:bold '(bold))
+                      (:italic '(italic))
+                      (:underline '(underline))
                       (_ nil)))
          (link-face (if link-href '(idris2-link-face) ()))
          (unique-val (cl-gensym)) ; HACK to stop consecutive mouse-faces from interfering
