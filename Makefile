@@ -3,6 +3,8 @@
 
 EMACS=emacs
 
+NEED_PKGS=prop-menu
+
 BATCHEMACS=$(EMACS) --batch --no-site-file -q \
 	-eval '(add-to-list (quote load-path) "${PWD}/")' \
 	-eval '(require (quote package))' \
@@ -46,6 +48,12 @@ clean:
 	-rm -f test-data/*ibc
 
 getdeps:
-	$(BATCHEMACS) -eval '(progn (package-refresh-contents) (unless (package-installed-p (quote prop-menu)) (package-install (quote prop-menu))))'
+	$(BATCHEMACS) -eval \
+		"(let* \
+		    ((need-pkgs '($(NEED_PKGS))) \
+		     (want-pkgs (seq-remove #'package-installed-p need-pkgs))) \
+		  (unless (null want-pkgs) \
+		    (package-refresh-contents) \
+		    (mapcar #'package-install want-pkgs)))"
 
 .PHONY: clean build test getdeps
