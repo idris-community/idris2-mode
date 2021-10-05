@@ -355,9 +355,9 @@ compiler-annotated output. Does not return a line number."
   ;; (car ref))))
   )
 
-(defun idris2-info-for-name (what name)
+(defun idris2-info-for-name (what name &optional pos)
   "Display the type for a name"
-  (let* ((ty (idris2-eval (list what name)))
+  (let* ((ty (idris2-eval (append (list what name) pos)))
              (result (car ty))
              (formatting (cdr ty)))
       (idris2-show-info (format "%s" result) formatting)))
@@ -430,9 +430,9 @@ compiler-annotated output. Does not return a line number."
   "Display the type of the name at point, considered as a global variable"
   (interactive "P")
   (let ((name (if thing (read-string "Check: ")
-                (idris2-name-at-point))))
+                (idris2-thing-at-point))))
     (when name
-      (idris2-info-for-name :type-of name))))
+      (idris2-info-for-name :type-of (car name) (cdr name)))))
 
 (defun idris2-print-definition-of-name (thing)
   "Display the definition of the function or type at point"
