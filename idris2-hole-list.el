@@ -45,7 +45,7 @@
     (define-key map (kbd "q") 'idris2-hole-list-quit)
     (define-key map (kbd "RET") 'idris2-compiler-notes-default-action-or-show-details)
     (define-key map (kbd "<mouse-2>") 'idris2-compiler-notes-default-action-or-show-details/mouse)
-    ;;; Allow buttons to be clicked with the left mouse button in the hole list
+    ;; Allow buttons to be clicked with the left mouse button in the hole list
     (define-key map [follow-link] 'mouse-face)
     (cl-loop for keyer
              in '(idris2-define-docs-keys
@@ -111,7 +111,6 @@ Invoces `idris2-hole-list-mode-hook'."
     (apply #'insert-button (idris2-tree.button tree))
     (insert (idris2-tree.after-button tree))))
 
-
 ;;; Prevent circularity error
 (autoload 'idris2-prove-hole "idris2-commands.el")
 
@@ -122,22 +121,22 @@ HOLE should be a three-element list consisting of the
 hole name, its premises, and its conclusion."
   (cl-destructuring-bind (name premises conclusion) hole
     (make-idris2-tree :item name
-                     :button (if idris2-enable-elab-prover
-                                 `("[E]"
-                                   help-echo "Elaborate interactively"
-                                   action ,#'(lambda (_)
-                                               (interactive)
-                                               (idris2-prove-hole name t)))
-                               `("[P]"
-                                 help-echo "Open in prover"
-                                 action ,#'(lambda (_)
-                                             (interactive)
-                                             (idris2-prove-hole name))))
-                     :highlighting `((0 ,(length name) ((:decor :metavar))))
-                     :print-fn #'idris2-hole-tree-printer
-                     :collapsed-p (not idris2-hole-list-show-expanded) ; from customize
-                     :preserve-properties '(idris2-tt-term)
-                     :kids (list (idris2-tree-for-hole-details name premises conclusion)))))
+                      :button (if idris2-enable-elab-prover
+                                  `("[E]"
+                                    help-echo "Elaborate interactively"
+                                    action ,#'(lambda (_)
+                                                (interactive)
+                                                (idris2-prove-hole name t)))
+                                `("[P]"
+                                  help-echo "Open in prover"
+                                  action ,#'(lambda (_)
+                                              (interactive)
+                                              (idris2-prove-hole name))))
+                      :highlighting `((0 ,(length name) ((:decor :metavar))))
+                      :print-fn #'idris2-hole-tree-printer
+                      :collapsed-p (not idris2-hole-list-show-expanded) ; from customize
+                      :preserve-properties '(idris2-tt-term)
+                      :kids (list (idris2-tree-for-hole-details name premises conclusion)))))
 
 (defun idris2-tree-for-hole-details (name premises conclusion)
   (let* ((name-width (1+ (apply #'max 0 (length name)
@@ -149,7 +148,7 @@ hole name, its premises, and its conclusion."
                        (cl-destructuring-bind (name type formatting) h
                          (cl-dotimes (_ (- name-width (length name))) (insert " "))
                          (idris2-propertize-spans (idris2-repl-semantic-text-props
-                                                  `((0 ,(length name) ((:decor :bound)))))
+                                                   `((0 ,(length name) ((:decor :bound)))))
                            (insert name))
                          (insert " : ")
                          (let ((start (point)))
@@ -174,7 +173,7 @@ hole name, its premises, and its conclusion."
                        (when premises
                          (insert " ")
                          (idris2-propertize-spans (idris2-repl-semantic-text-props
-                                                  `((0 ,(length name) ((:decor :metavar)))))
+                                                   `((0 ,(length name) ((:decor :metavar)))))
                            (insert name))
                          (insert " : "))
                        (idris2-propertize-spans (idris2-repl-semantic-text-props formatting)
@@ -188,9 +187,8 @@ hole name, its premises, and its conclusion."
                          (insert "\n")))
                      (buffer-string))))
     (make-idris2-tree :item contents
-                     :active-p nil
-                     :highlighting '()
-                     :preserve-properties '(idris2-tt-term))))
-
+                      :active-p nil
+                      :highlighting '()
+                      :preserve-properties '(idris2-tt-term))))
 
 (provide 'idris2-hole-list)

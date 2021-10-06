@@ -25,10 +25,10 @@
 ;; that buffer to a minimum.
 
 ;;; Code:
+
 (require 'prop-menu)
 (require 'idris2-core)
 (require 'idris2-common-utils)
-
 
 (defvar idris2-info-history (list () nil ())
   "A zipper into the history for idris2-info-mode.
@@ -71,12 +71,11 @@ Following the behavior of Emacs help buffers, the future is deleted."
 (defvar idris2-buffer-to-return-to-from-info-buffer
   "The buffer that should be returned to when the info buffer is closed.")
 
-
 (defvar idris2-info-mode-map
   (let ((map (make-keymap)))
-    (suppress-keymap map) ; remove the self-inserting char commands
+    (suppress-keymap map)               ; remove the self-inserting char commands
     (define-key map (kbd "q") 'idris2-info-quit)
-    ;;; Allow buttons to be clicked with the left mouse button in info buffers
+    ;; Allow buttons to be clicked with the left mouse button in info buffers
     (define-key map [follow-link] 'mouse-face)
     (cl-loop for keyer
              in '(idris2-define-docs-keys
@@ -113,10 +112,8 @@ Ensure that the buffer is in `idris2-info-mode'."
   (idris2-kill-buffer idris2-info-buffer-name)
   (if (and idris2-buffer-to-return-to-from-info-buffer (buffer-live-p idris2-buffer-to-return-to-from-info-buffer))
       (pop-to-buffer idris2-buffer-to-return-to-from-info-buffer `(display-buffer-reuse-window))
-    ()
-    )
-  (setq idris2-buffer-to-return-to-from-info-buffer nil)
-  )
+    ())
+  (setq idris2-buffer-to-return-to-from-info-buffer nil))
 
 (defun idris2-info-buffer-visible-p ()
   (if (get-buffer-window idris2-info-buffer-name 'visible) t nil))
@@ -155,15 +152,12 @@ Ensure that the buffer is in `idris2-info-mode'."
        (idris2-info-history-insert ,str-info)
        (idris2-info-show))))
 
-
 (defun idris2-show-info (info-string &optional spans)
   "Show INFO-STRING in the Idris2 info buffer, obliterating its previous contents."
   (with-idris2-info-buffer
     (idris2-propertize-spans (idris2-repl-semantic-text-props spans)
       (insert info-string)))
   info-string)
-
-
 
 (provide 'idris2-info)
 ;;; idris2-info.el ends here

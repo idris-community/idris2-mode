@@ -24,6 +24,7 @@
 ;; Boston, MA 02111-1307, USA.
 
 ;;; Code:
+
 (require 'idris2-compat)
 
 (defun idris2-is-ident-char-p (ch)

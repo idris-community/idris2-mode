@@ -57,7 +57,7 @@
 (defun idris2-get-bg-color () (face-attribute 'default :background))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 
 (defvar idris2-prompt-string "Idris2"
