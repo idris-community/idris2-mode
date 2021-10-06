@@ -6,7 +6,7 @@ It's a copy of (https://github.com/idris-hackers/idris-mode) mostly, for working
 
 Install it by running within your `~/.emacs.d` directory:
 ```
-$ git clone https://github.com/redfish64/idris2-mode
+$ git clone https://github.com/idris-community/idris2-mode
 ```
 
 Then in your `~/.emacs.d/init.el` file, add:
