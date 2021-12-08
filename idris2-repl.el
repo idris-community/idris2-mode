@@ -354,9 +354,9 @@ Invokes `idris2-repl-mode-hook'."
                (input-col (save-excursion
                             (goto-char start-pos)
                             (current-column)))
-               (start-line-repl (+ input-line start-line -1))
-               (start-col-repl (+ input-col start-col))
-               (end-line-repl (+ input-line end-line -1))
+               (start-line-repl (+ input-line start-line -1))  ;; Revisit these once we implement
+               (start-col-repl (+ input-col start-col))        ;; highlighting of repl inputs
+               (end-line-repl (+ input-line end-line -1))      ;; in case bounds need to be adjusted
                (end-col-repl (+ input-col end-col)))
           (idris2-highlight-input-region buffer
                                         start-line-repl start-col-repl
