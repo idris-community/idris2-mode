@@ -227,8 +227,8 @@ A prefix argument forces loading but only up to the current line."
                        (when (string= (file-name-nondirectory fn)
                                       (file-name-nondirectory (buffer-file-name)))
                          (idris2-highlight-input-region (current-buffer)
-                                                       start-line start-col
-                                                       end-line end-col
+                                                       (+ 1 start-line) (+ 1 start-col)
+                                                       (+ 1 end-line  ) (+ 1 end-col)
                                                        props))))))
                (_ (idris2-make-clean)
                   (idris2-update-options-cache)
@@ -364,14 +364,16 @@ compiler-annotated output. Does not return a line number."
 
 (defun idris2-jump-to-location (loc is-same-window)
   "jumps to specified location"
-  (pcase-let* ((`(,name ,file ,line ,col) loc)
+  (pcase-let* ((`(,name (:filename ,file)
+                          (:start ,line ,col)
+                          (:end ,_ ,_)) loc) 
 	       (full-path file))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
     (if full-path
-  (idris2-goto-source-location-full full-path (+ 1 line) col is-same-window)
+  (idris2-goto-source-location-full full-path (+ 1 line) (+ col 1) is-same-window)
       (user-error "Source not found for %s" file)
       )
     )
@@ -386,7 +388,7 @@ compiler-annotated output. Does not return a line number."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (dolist (loc (reverse locs))
-	(pcase-let* ((`(,name ,file ,line ,col) loc)
+	(pcase-let* ((`(,name (:filename ,file) ,_ ,_) loc) 
 		     (fullpath file)
 		     )
 	  (if (file-exists-p fullpath)
