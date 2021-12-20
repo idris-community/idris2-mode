@@ -357,9 +357,9 @@ compiler-annotated output. Does not return a line number."
 
 (defun idris2-jump-to-location (loc is-same-window)
   "Jumps to specified location."
-  (pcase-let* ((`(,name (:filename ,file)
-                        (:start ,line ,col)
-                        (:end ,_ ,_)) loc)
+  (pcase-let* ((`(,_name (:filename ,file)
+                         (:start ,line ,col)
+                         (:end ,_ ,_)) loc)
 	       (full-path file))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
