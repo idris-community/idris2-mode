@@ -81,10 +81,10 @@ WARNING is of form (filename (startline startcolumn) (endline endcolumn) message
 As of 20140807 (Idris2 0.9.14.1-git:abee538) (endline endcolumn) is mostly the same as (startline startcolumn)
 "
   (cl-destructuring-bind (filename sl1 sl2 message spans) warning
-    (let ((startline (nth 0 sl1))
-          (startcol (1- (nth 1 sl1)))
-          (endline (nth 0 sl2))
-          (endcol (1- (nth 1 sl2))))
+    (let ((startline (1+ (nth 0 sl1)))
+          (startcol      (nth 1 sl1))
+          (endline   (1+ (nth 0 sl2)))
+          (endcol        (nth 1 sl2)))
       (push (list filename startline startcol message spans) idris2-raw-warnings)
       (let* ((fullpath (concat (file-name-as-directory idris2-process-current-working-directory)
                                filename))
