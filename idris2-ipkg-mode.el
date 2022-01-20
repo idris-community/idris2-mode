@@ -73,6 +73,7 @@
     "postinstall"
     "preclean"
     "postclean"
+    "langversion"
     "version"
     "depends"
     "modules"
