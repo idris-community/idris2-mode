@@ -15,6 +15,7 @@
 ;; Idris2.
 
 ;;; Code:
+
 (require 'ansi-color)
 (require 'compile)
 
@@ -34,7 +35,6 @@
   '((t (:inherit font-lock-function-name-face)))
   "The face to highlight the name of the package"
   :group 'idris2-faces)
-
 
 ;;; Syntax
 
@@ -82,7 +82,6 @@
 
 (defconst idris2-ipkg-font-lock-defaults
   `(,idris2-ipkg-keywords))
-
 
 ;;; Completion
 
@@ -147,7 +146,7 @@
                                         (interactive)
                                         (dired src-dir)))
           (idris2-make-file-link-overlay start end map
-                                        (concat "mouse-2: dired " src-dir)))))
+                                         (concat "mouse-2: dired " src-dir)))))
     ;; Make the modules clickable
     (save-excursion
       (goto-char (point-min))
@@ -168,13 +167,12 @@
         (let ((start (match-beginning 1))
               (end (match-end 1))
               (makefile (concat (file-name-as-directory src-dir) (match-string 1))))
-        (when (file-exists-p makefile)
-          (let ((map (make-sparse-keymap)))
-            (define-key map [mouse-2] #'(lambda ()
-                                          (interactive)
-                                          (find-file makefile)))
-            (idris2-make-file-link-overlay start end map  "mouse-2: edit makefile"))))))))
-
+          (when (file-exists-p makefile)
+            (let ((map (make-sparse-keymap)))
+              (define-key map [mouse-2] #'(lambda ()
+                                            (interactive)
+                                            (find-file makefile)))
+              (idris2-make-file-link-overlay start end map  "mouse-2: edit makefile"))))))))
 
 (defun idris2-ipkg-enable-clickable-files ()
   "Enable setting up clickable modules and makefiles on idle Emacs"
@@ -392,11 +390,11 @@ arguments."
 ;;; Mode definition
 
 (defvar idris2-ipkg-mode-map (let ((map (make-sparse-keymap)))
-                              (cl-loop for keyer
-                                       in '(idris2-define-ipkg-keys
-                                            idris2-define-ipkg-editing-keys)
-                                       do (funcall keyer map))
-                              map)
+                               (cl-loop for keyer
+                                        in '(idris2-define-ipkg-keys
+                                             idris2-define-ipkg-editing-keys)
+                                        do (funcall keyer map))
+                               map)
   "Keymap used for Idris2 package mode")
 
 (easy-menu-define idris2-ipkg-mode-menu idris2-ipkg-mode-map

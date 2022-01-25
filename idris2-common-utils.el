@@ -28,10 +28,10 @@
 ;; throughout idris2-mode.
 
 ;;; Code:
+
 (require 'idris2-core)
 (require 'idris2-settings)
 (require 'cl-lib)
-
 
 ;;; These variables are here because many things depend on them
 (defvar-local idris2-buffer-dirty-p t
@@ -166,7 +166,7 @@ inserted text (that is, relative to point prior to insertion)."
                       (:underline '(underline))
                       (_ nil)))
          (link-face (if link-href '(idris2-link-face) ()))
-         (unique-val (cl-gensym)) ; HACK to stop consecutive mouse-faces from interfering
+         (unique-val (cl-gensym))       ; HACK to stop consecutive mouse-faces from interfering
          (mousable-face
           (cond ((member (cadr decor) idris2-semantic-properties-clickable-decors)
                  `((:inherit (,decor-face highlight) :hack ,unique-val)))
@@ -186,7 +186,6 @@ inserted text (that is, relative to point prior to insertion)."
                                 aquote-face)))
     (append (if computed-face (list 'face computed-face) ())
             (if mousable-face (list 'mouse-face mousable-face) ()))))
-
 
 (defun idris2-semantic-properties-eldoc (props)
   "Compute an Eldoc string from Idris2 semantic properties PROPS"
@@ -216,7 +215,6 @@ inserted text (that is, relative to point prior to insertion)."
           (namespace (list 'idris2-eldoc
                            (cadr namespace)))
           (t nil))))
-
 
 (defun idris2-semantic-properties-help-echo (props)
   (let* ((name (assoc :name props))
@@ -318,8 +316,8 @@ If PROP-VALUE-FN is non-nil use it to extract PROP's value."
                             #'previous-single-char-property-change
                           #'next-single-char-property-change))
         (prop-value-fn (or prop-value-fn
-                            (lambda ()
-                              (get-text-property (point) prop))))
+                           (lambda ()
+                             (get-text-property (point) prop))))
         (start (point))
         (prop-value))
     (while (progn

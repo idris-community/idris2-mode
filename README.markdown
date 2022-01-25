@@ -1,8 +1,9 @@
 # idris2-mode for emacs
 
-This is an emacs mode for editing Idris2 code.
+This is an emacs mode for editing Idris 2 code.
 
-It's a copy of (https://github.com/idris-hackers/idris-mode) mostly, for working with Idris2 in its present state. See that readme for more details.
+It's a copy of (https://github.com/idris-hackers/idris-mode) mostly, for working with Idris 2 in its
+present state.  See that readme for more details.
 
 Install it by running within your `~/.emacs.d` directory:
 ```
@@ -38,11 +39,11 @@ C-c C-d C-t	idris2-type-search
 <unmapped>  idris2-jump-to-def-same-window
 ```
 
-Note, if you use evil-mode, you'll probably want to use this to
-prevent a huge lag when editing files, see https://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
+Note, if you use evil-mode, you'll probably want to use this to prevent a huge lag when editing
+files, see https://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
 
 ```
-;;Fixes lag when editing idris code with evil
+;; Fixes lag when editing idris code with evil
 (defun ~/evil-motion-range--wrapper (fn &rest args)
   "Like `evil-motion-range', but override field-beginning for performance.
 See URL `https://github.com/ProofGeneral/PG/issues/427'."

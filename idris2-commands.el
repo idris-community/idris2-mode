@@ -111,7 +111,6 @@
     ;; Otherwise just make it dirty.
     (idris2-make-dirty)))
 
-
 (defun idris2-update-loaded-region (fc)
   (if fc
       (let* ((end (assoc :end fc))
@@ -128,7 +127,6 @@
                                               (point))
                               (current-buffer)))
           (overlay-put idris2-loaded-region-overlay 'face 'idris2-loaded-region-face)))
-
     ;; HACK: Some versions of Idris2 don't properly return a span for
     ;; some modules, returning () instead. Remove this (and the
     ;; surrounding (if fc)) after Idris2 0.9.17, which contains a fix.
@@ -227,9 +225,9 @@ A prefix argument forces loading but only up to the current line."
                        (when (string= (file-name-nondirectory fn)
                                       (file-name-nondirectory (buffer-file-name)))
                          (idris2-highlight-input-region (current-buffer)
-                                                       (+ 1 start-line) (+ 1 start-col)
-                                                       (+ 1 end-line  ) (+ 1 end-col)
-                                                       props))))))
+                                                        (+ 1 start-line) (+ 1 start-col)
+                                                        (+ 1 end-line  ) (+ 1 end-col)
+                                                        props))))))
                (_ (idris2-make-clean)
                   (idris2-update-options-cache)
 
@@ -242,7 +240,7 @@ A prefix argument forces loading but only up to the current line."
              (when (member 'warnings-tree idris2-warnings-printing)
                (idris2-list-compiler-notes)
                (if idris2-stay-in-current-window-on-compiler-error
-                 (display-buffer (idris2-buffer-name :notes))
+                   (display-buffer (idris2-buffer-name :notes))
                  (pop-to-buffer (idris2-buffer-name :notes))))))))
     (error "Cannot find file for current buffer")))
 
@@ -257,8 +255,9 @@ A prefix argument forces loading but only up to the current line."
 (defun idris2-next-error ()
   "Jump to the next error overlay in the buffer."
   (interactive)
-  (let ((warnings-forward (sort (cl-remove-if-not #'(lambda (w) (> (overlay-start w) (point))) idris2-warnings)
-                                #'(lambda (w1 w2) (<= (overlay-start w1) (overlay-start w2))))))
+  (let ((warnings-forward
+         (sort (cl-remove-if-not #'(lambda (w) (> (overlay-start w) (point))) idris2-warnings)
+               #'(lambda (w1 w2) (<= (overlay-start w1) (overlay-start w2))))))
     (if warnings-forward
         (goto-char (overlay-start (car warnings-forward)))
       (error "No warnings or errors until end of buffer"))))
@@ -266,8 +265,9 @@ A prefix argument forces loading but only up to the current line."
 (defun idris2-previous-error ()
   "Jump to the previous error overlay in the buffer."
   (interactive)
-  (let ((warnings-backward (sort (cl-remove-if-not #'(lambda (w) (< (overlay-end w) (point))) idris2-warnings)
-                                #'(lambda (w1 w2) (>= (overlay-end w1) (overlay-end w2))))))
+  (let ((warnings-backward
+         (sort (cl-remove-if-not #'(lambda (w) (< (overlay-end w) (point))) idris2-warnings)
+               #'(lambda (w1 w2) (>= (overlay-end w1) (overlay-end w2))))))
     (if warnings-backward
         (goto-char (overlay-end (car warnings-backward)))
       (error "No warnings or errors until beginning of buffer"))))
@@ -291,16 +291,15 @@ Idris2 process. This sets the load position to point, if there is one."
           (let ((result
                  (if idris2-load-to-here
                      (idris2-eval `(:load-file ,fn
-                                              ,(save-excursion
-                                                 (goto-char idris2-load-to-here)
-                                                 (idris2-get-line-num))))
+                                               ,(save-excursion
+                                                  (goto-char idris2-load-to-here)
+                                                  (idris2-get-line-num))))
                    (idris2-eval `(:load-file ,fn)))))
             (idris2-update-options-cache)
             (setq idris2-currently-loaded-buffer (current-buffer))
             (idris2-make-clean)
             (idris2-update-loaded-region (car result)))))
     (error "Cannot find file for current buffer")))
-
 
 (defun idris2-get-line-num ()
   "Get the current line number"
@@ -310,34 +309,28 @@ Idris2 process. This sets the load position to point, if there is one."
       (beginning-of-line)
       (1+ (count-lines 1 (point))))))
 
-
 (defun idris2-thing-at-point-raw ()
   "Return the name at point, or nil otherwise. Use this in Idris2 source buffers."
-   (if (equal (syntax-after (point))
-        (string-to-syntax ".")) ;; TODO 3 probably this should be replaced with idris2 operator characters
-       ;; We're on an operator.
-       (save-excursion
-   (skip-syntax-backward ".")
-   (let ((beg (point)))
-     (skip-syntax-forward ".")
-     (buffer-substring-no-properties beg (point))))
-     ;; Try if we're on a symbol or fail otherwise.
-     (current-word t)
-     )
-  )
+  (if (equal (syntax-after (point))
+             (string-to-syntax ".")) ;; TODO 3 probably this should be replaced with idris2 operator characters
+      ;; We're on an operator.
+      (save-excursion
+        (skip-syntax-backward ".")
+        (let ((beg (point)))
+          (skip-syntax-forward ".")
+          (buffer-substring-no-properties beg (point))))
+    ;; Try if we're on a symbol or fail otherwise.
+    (current-word t)))
 
 (defun idris2-thing-at-point (&optional prompt)
   "Return the name, line, and column number at point as a list. If prompt is t then
 will prompt user if no symbol is there, and return what was entered by the user along with
 the line and col number. Otherwise, will return nil for whole list.
 Use this in Idris2 source buffers."
-
-  (let ((name (or (idris2-thing-at-point-raw) (and prompt (read-string "Enter symbol: " nil)))))
-    (if name
-  (list name (idris2-get-line-num) (current-column)) nil)
-    )
-  )
-
+  (let ((name (or (idris2-thing-at-point-raw)
+                  (and prompt (read-string "Enter symbol: " nil)))))
+    (when name
+      (list name (idris2-get-line-num) (current-column)))))
 
 (defun idris2-name-at-point ()
   "Return the name at point, taking into account semantic
@@ -356,28 +349,25 @@ compiler-annotated output. Does not return a line number."
   )
 
 (defun idris2-info-for-name (what name &optional pos)
-  "Display the type for a name"
+  "Display the type for a name."
   (let* ((ty (idris2-eval (append (list what name) pos)))
-             (result (car ty))
-             (formatting (cdr ty)))
-      (idris2-show-info (format "%s" result) formatting)))
+         (result (car ty))
+         (formatting (cdr ty)))
+    (idris2-show-info (format "%s" result) formatting)))
 
 (defun idris2-jump-to-location (loc is-same-window)
-  "jumps to specified location"
-  (pcase-let* ((`(,name (:filename ,file)
-                          (:start ,line ,col)
-                          (:end ,_ ,_)) loc) 
+  "Jumps to specified location."
+  (pcase-let* ((`(,_name (:filename ,file)
+                         (:start ,line ,col)
+                         (:end ,_ ,_)) loc)
 	       (full-path file))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
     ;; default Ctl-t)
     (if full-path
-  (idris2-goto-source-location-full full-path (+ 1 line) (+ col 1) is-same-window)
-      (user-error "Source not found for %s" file)
-      )
-    )
-  )
+        (idris2-goto-source-location-full full-path (+ 1 line) (+ col 1) is-same-window)
+      (user-error "Source not found for %s" file))))
 
 (defun idris2-show-jump-choices (locs is-same-window)
   (unless (idris2-info-buffer-visible-p)
@@ -388,45 +378,33 @@ compiler-annotated output. Does not return a line number."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (dolist (loc (reverse locs))
-	(pcase-let* ((`(,name (:filename ,file) ,_ ,_) loc) 
-		     (fullpath file)
-		     )
+	(pcase-let* ((`(,name (:filename ,file) ,_ ,_) loc)
+		     (fullpath file))
 	  (if (file-exists-p fullpath)
 	      (insert-button name 'follow-link t 'button loc
 			     'action #'(lambda (_) (idris2-info-quit) (idris2-jump-to-location loc is-same-window)))
 	    (insert (format "%s (not found)" name)))
 	  (insert-char ?\n)
-	  (goto-char (point-min))
-	  )
-	)
-      )
-    )
-  )
+	  (goto-char (point-min)))))))
 
 (defun idris2-jump-to-def-name (name &optional is-same-window)
   (let ((res (car (idris2-eval (cons :name-at (cons name ()))))))
     (if (null res)
-  (user-error "symbol '%s' not found" name)
+        (user-error "symbol '%s' not found" name)
       (if (null (cdr res)) ;; only one choice
-    (idris2-jump-to-location (car res) is-same-window)
-  (idris2-show-jump-choices res is-same-window)
-  )
-     )
-    )
-  )
+          (idris2-jump-to-location (car res) is-same-window)
+        (idris2-show-jump-choices res is-same-window)))))
 
 (defun idris2-jump-to-def (&optional is-same-window)
-  "moves cursor to the definition of type at point"
+  "Moves cursor to the definition of type at point"
   (interactive)
   (let ((name (car (idris2-thing-at-point t))))
-    (idris2-jump-to-def-name name is-same-window))
-  )
+    (idris2-jump-to-def-name name is-same-window)))
 
 (defun idris2-jump-to-def-same-window ()
-  "same as idris2-jump-to-def but uses same window (note: previous position can be restored using \\[pop-tag-mark]"
+  "Same as idris2-jump-to-def but uses same window (note: previous position can be restored using \\[pop-tag-mark]"
   (interactive)
   (idris2-jump-to-def t))
-
 
 (defun idris2-type-at-point (thing)
   "Display the type of the name at point, considered as a global variable"
@@ -445,43 +423,40 @@ compiler-annotated output. Does not return a line number."
       (idris2-info-for-name :print-definition name))))
 
 (defun idris2-extract-location-from-name (str)
-  "given a string in the form '(name) (possibly 'implementation' at (filename):(startline):(startcol)--(endline):(endcol)', extracts filename, startline and startcol as a list or nil otherwise"
-  (let* ((index (string-match "\\([^ ]+\\) \\(?:implementation \\)?at \\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)--[0-9]+:[0-9]+$" str)))
-    (if (null index) nil
-      (progn
-  (let
-      (
-       (n (match-string 1 str))
-       (fn (match-string 2 str))
-       (ln (string-to-number (match-string 3 str)))
-       (col (- (string-to-number (match-string 4 str)) 1))) ;; For some reason, ex. for col 0, Idris returns 0 as the column when using ':name-at' and 1 when printing to the user, so we subtract 1 to be consistent internally
-  (list n fn ln col)))
-      )
-    ))
-
-
+  "Given a string in the form '(name) (possibly 'implementation' at (filename):(startline):(startcol)--(endline):(endcol)', extracts filename, startline and startcol as a list or nil otherwise"
+  (let ((index (string-match "\\([^ ]+\\) \\(?:implementation \\)?at \\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)--[0-9]+:[0-9]+$" str)))
+    (unless (null index)
+      (let ((n (match-string 1 str))
+            (fn (match-string 2 str))
+            (ln (string-to-number (match-string 3 str)))
+            (col (- (string-to-number (match-string 4 str)) 1))) ;; For some reason, ex. for col 0,
+                                                                 ;; Idris returns 0 as the column
+                                                                 ;; when using ':name-at' and 1 when
+                                                                 ;; printing to the user, so we
+                                                                 ;; subtract 1 to be consistent
+                                                                 ;; internally
+        (list n fn ln col)))))
 
 (defun idris2-who-calls-name-helper (collapse name-str children)
   (make-idris2-tree
    :item ""
    :highlighting nil
    :collapsed-p collapse
-   :button (list name-str 'action #'(lambda (button)
-				      (let ((loc (idris2-extract-location-from-name name-str)))
-					(if loc
-					    (idris2-jump-to-location loc nil)
-					  (idris2-jump-to-def-name name-str nil)))))
-   :kids
-      #'(lambda () (mapcar #'(lambda (child)
-			       (pcase-let* ((`(,cname ,ctimes-called) child)
-					    (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname))))))
-					    )
-				 (idris2-who-calls-name-helper t cname children-of-child)
-		    ;; (idris2-who-calls-name-helper t (format "%s (Called %d times)" cname ctimes-called) children-of-child))
-		   ))
-			   children))
-   :preserve-properties '(idris2-tt-tree))
-  )
+   :button (list name-str 'action
+                 #'(lambda (_button)
+		     (let ((loc (idris2-extract-location-from-name name-str)))
+		       (if loc
+			   (idris2-jump-to-location loc nil)
+			 (idris2-jump-to-def-name name-str nil)))))
+   :kids #'(lambda ()
+             (mapcar #'(lambda (child)
+			 (pcase-let* ((`(,cname ,_ctimes-called) child)
+				      (children-of-child (car (cdr (caar (idris2-eval `(:who-calls ,cname)))))))
+			   (idris2-who-calls-name-helper t cname children-of-child)
+		           ;; (idris2-who-calls-name-helper t (format "%s (Called %d times)" cname ctimes-called) children-of-child))
+		           ))
+		     children))
+   :preserve-properties '(idris2-tt-tree)))
 
 (defun idris2-who-calls-name (name)
   "Show the callers of NAME in a tree."
@@ -492,12 +467,11 @@ compiler-annotated output. Does not return a line number."
       (message "The name %s was not found." name))
     nil))
 
-(defun idris2-who-calls-name-at-point (thing)
+(defun idris2-who-calls-name-at-point (_thing)
   (interactive "P")
   (xref-push-marker-stack)
   (let ((name-loc (idris2-thing-at-point t)))
-    (idris2-who-calls-name (car name-loc)))
-  )
+    (idris2-who-calls-name (car name-loc))))
 
 (defun idris2-name-calls-who (name)
   "Show the callees of NAME in a tree."
@@ -528,7 +502,7 @@ compiler-annotated output. Does not return a line number."
                (get-text-property (point) 'idris2-namespace))))
      (list (read-string "Browse namespace: " default))))
   (idris2-tree-info-show (idris2-namespace-tree namespace)
-                        "Browse Namespace"))
+                         "Browse Namespace"))
 
 (defun idris2-caller-tree (caller cmd)
   "Display a tree from an IDE caller list, lazily retrieving a few levels at a time"
@@ -540,12 +514,11 @@ compiler-annotated output. Does not return a line number."
       :collapsed-p t
       :kids (lambda ()
               (cl-mapcan #'(lambda (child)
-                             (let* (
-            (cmd-to-run (list cmd (car child))
-            (child-name (car (idris2-eval `(,cmd ,(car child))))))
+                             (let* ((cmd-to-run (list cmd (car child)))
+                                    (child-name (car (idris2-eval `(,cmd ,(car child))))))
                                (if child-name
-                                   (list (idris2-caller-tree child-name cmd))
-                                 nil))))
+                                   (list (idris2-caller-tree child-name cmd-to-run))
+                                 nil)))
                          children))
       :preserve-properties '(idris2-tt-tree)))
     (_ (error "failed to make tree from %s" caller))))
@@ -554,10 +527,11 @@ compiler-annotated output. Does not return a line number."
   "Create a tree of the contents of NAMESPACE, lazily retrieving children when RECURSIVE is non-nil."
   (cl-flet*
       ;; Show names as childless trees with decorated roots
-      ((name-tree (n) (make-idris2-tree :item (car n)
-                                       :highlighting (cadr n)
-                                       :kids nil
-                                       :preserve-properties '(idris2-tt-tree)))
+      ((name-tree (n)
+                  (make-idris2-tree :item (car n)
+                                    :highlighting (cadr n)
+                                    :kids nil
+                                    :preserve-properties '(idris2-tt-tree)))
        ;; The children of a tree are the namespaces followed by the names.
        (get-children (sub-namespaces names)
                      (append (mapcar #'(lambda (ns)
@@ -618,28 +592,28 @@ KILLFLAG is set if N was explicitly specified."
   (interactive "p\nP")
   (unless (integerp n)
     (signal 'wrong-type-argument (list 'integerp n)))
-   (cond
-    ;; Under the circumstances that `delete-forward-char' does something
-    ;; special, delegate to it. This was discovered by reading the source to
-    ;; it.
-    ((and (use-region-p)
-          delete-active-region
-          (= n 1))
-     (call-interactively 'delete-forward-char n killflag))
-    ;; If in idris2-mode and editing an LIDR file and at the end of a line,
-    ;; then delete the newline and a leading >, if it exists
-    ((and (eq major-mode 'idris2-mode)
-          (idris2-lidr-p)
-          (= n 1)
-          (eolp))
-     (delete-char 1 killflag)
-     (when (and (not (eolp)) (equal (following-char) ?\>))
-       (delete-char 1 killflag)
-       (when (and (not (eolp)) (equal (following-char) ?\ ))
-         (delete-char 1 killflag))))
-    ;; Nothing special to do - delegate to `delete-char', just as
-    ;; `delete-forward-char' does
-    (t (delete-char 1 killflag))))
+  (cond
+   ;; Under the circumstances that `delete-forward-char' does something
+   ;; special, delegate to it. This was discovered by reading the source to
+   ;; it.
+   ((and (use-region-p)
+         delete-active-region
+         (= n 1))
+    (call-interactively 'delete-forward-char n killflag))
+   ;; If in idris2-mode and editing an LIDR file and at the end of a line,
+   ;; then delete the newline and a leading >, if it exists
+   ((and (eq major-mode 'idris2-mode)
+         (idris2-lidr-p)
+         (= n 1)
+         (eolp))
+    (delete-char 1 killflag)
+    (when (and (not (eolp)) (equal (following-char) ?\>))
+      (delete-char 1 killflag)
+      (when (and (not (eolp)) (equal (following-char) ?\ ))
+        (delete-char 1 killflag))))
+   ;; Nothing special to do - delegate to `delete-char', just as
+   ;; `delete-forward-char' does
+   (t (delete-char 1 killflag))))
 
 (defun idris2-apropos (what)
   "Look up something in names, type signatures, and docstrings"
@@ -651,7 +625,7 @@ KILLFLAG is set if N was explicitly specified."
   (interactive "sSearch for type: ")
   (idris2-info-for-name :interpret (concat ":search " what)))
 
-(defun idris2-docs-at-point (thing)
+(defun idris2-docs-at-point (_thing)
   "Display the internal documentation for the name at point, considered as a global variable"
   (interactive)
   (message "Not implemented yet"))
@@ -684,7 +658,6 @@ KILLFLAG is set if N was explicitly specified."
             (goto-char (match-beginning 0))
             (copy-region-as-kill (mark) (point))
             (message "Code copied to kill ring")))))))
-
 
 (defun idris2-case-split ()
   "Case split the pattern variable at point"
@@ -727,7 +700,7 @@ KILLFLAG is set if N was explicitly specified."
       (save-excursion (idris2-load-file-sync))
       (let ((result (car (idris2-eval `(,command ,(cadr what) ,(car what)))))
             final-point
-            (prefix (save-excursion        ; prefix is the indentation to insert for the clause
+            (prefix (save-excursion     ; prefix is the indentation to insert for the clause
                       (goto-char (point-min))
                       (forward-line (1- (cadr what)))
                       (goto-char (line-beginning-position))
@@ -756,8 +729,7 @@ KILLFLAG is set if N was explicitly specified."
 (defun idris2-add-missing ()
   "Add missing cases"
   (interactive)
-  (message "No add-missing in Idris2 yet")
-  )
+  (message "No add-missing in Idris2 yet"))
 
 (defun idris2-make-with-block ()
   "Add with block"
@@ -804,7 +776,7 @@ KILLFLAG is set if N was explicitly specified."
                    (goto-char end-point))))
               ((equal lemma-type :provisional-definition-lemma)
                (message
-"idris2-make-lemma: recieved an unsupported \
+                "idris2-make-lemma: recieved an unsupported \
 'provisional-definition-lemma' response. Ignored.")))))))
 
 (defun idris2-compile-and-execute ()
@@ -813,31 +785,27 @@ KILLFLAG is set if N was explicitly specified."
   (idris2-load-file-sync)
   (idris2-eval '(:interpret ":exec")))
 
-(defun idris2-proof-search (&optional arg)
+(defun idris2-proof-search (&optional _arg)
   "Invoke the proof search. A plain prefix argument causes the
 command to prompt for hints and recursion depth, while a numeric
 prefix argument sets the recursion depth directly."
   (interactive "P")
-  (let
-      ((what (idris2-thing-at-point)))
+  (let ((what (idris2-thing-at-point)))
     (when (car what)
       (save-excursion (idris2-load-file-sync))
       (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
-  (if (string= result "")
-      (error "Nothing found")
-    (save-excursion
-      (let ((start (progn (search-backward "?") (point)))
-      (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-        (delete-region start end))
-      (insert result)))))
-    )
-  )
+        (if (string= result "")
+            (error "Nothing found")
+          (save-excursion
+            (let ((start (progn (search-backward "?") (point)))
+                  (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+              (delete-region start end))
+            (insert result)))))))
 
-(defun idris2-refine (name)
+(defun idris2-refine (_name)
   "Refine by some NAME, without recursive proof search."
   (interactive)
-  (message "No refine in Idris2 yet!")
-)
+  (message "No refine in Idris2 yet!"))
 
 (defun idris2-identifier-backwards-from-point ()
   (let (identifier-start
@@ -859,14 +827,12 @@ prefix argument sets the recursion depth directly."
 This function does not attempt to load the buffer if it's not
 already loaded, as a buffer awaiting completion is probably not
 type-correct, so loading will fail."
-  (if (not idris2-process)
-      nil
+  (unless (not idris2-process)
     (cl-destructuring-bind (identifier start end) (idris2-identifier-backwards-from-point)
       (when identifier
         (let ((result (car (idris2-eval `(:repl-completions ,identifier)))))
           (cl-destructuring-bind (completions _partial) result
-            (if (null completions)
-                nil
+            (unless (null completions)
               (list start end completions
                     :exclusive 'no))))))))
 
@@ -880,8 +846,7 @@ type-correct, so loading will fail."
       (let ((candidates (cl-remove-if-not
                          (apply-partially #'string-prefix-p identifier)
                          all-idris2-keywords)))
-        (if (null candidates)
-            nil
+        (unless (null candidates)
           (list start end candidates
                 :exclusive 'no))))))
 
@@ -1130,7 +1095,7 @@ of the term to replace."
 (defun idris2-prove-hole (name &optional elab)
   "Launch the prover on the hole NAME, using Elab mode if ELAB is non-nil."
   (idris2-eval-async `(:interpret ,(concat (if elab ":elab " ":p ") name))
-                    (lambda (_) t))
+                     (lambda (_) t))
   ;; The timer is necessary because of the async nature of starting the prover
   (run-with-timer 0.25 nil
                   #'(lambda ()
@@ -1142,8 +1107,9 @@ of the term to replace."
 
 (defun idris2-fill-paragraph (justify)
   ;; In literate Idris2 files, allow filling non-code paragraphs
-  (if (and (idris2-lidr-p) (not (save-excursion (move-beginning-of-line nil)
-                                               (looking-at-p ">\\s-"))))
+  (if (and (idris2-lidr-p)
+           (not (save-excursion (move-beginning-of-line nil)
+                                (looking-at-p ">\\s-"))))
       (fill-paragraph justify)
     (save-excursion
       (if (nth 4 (syntax-ppss))
@@ -1157,15 +1123,14 @@ of the term to replace."
           ;; Otherwise do nothing
           "")))))
 
-
 (defun idris2-set-idris2-load-packages ()
   "Interactively set the `idris2-load-packages' variable"
   (interactive)
   (let* ((idris2-libdir (replace-regexp-in-string
-                        "[\r\n]*\\'" ""   ; remove trailing newline junk
-                        (shell-command-to-string (concat idris2-interpreter-path " --libdir"))))
+                         "[\r\n]*\\'" "" ; remove trailing newline junk
+                         (shell-command-to-string (concat idris2-interpreter-path " --libdir"))))
          (idris2-libs (cl-remove-if #'(lambda (x) (string= (substring x 0 1) "."))
-                                   (directory-files idris2-libdir)))
+                                    (directory-files idris2-libdir)))
          (packages '())
          (prompt "Package to use (blank when done): ")
          (this-package (completing-read prompt (cons "" idris2-libs))))
@@ -1240,13 +1205,13 @@ of the term to replace."
 
 (defun idris2-set-current-pretty-print-width ()
   "Send the current pretty-printer width to Idris2, if there is a process."
-  (let ((command (format ":consolewidth %s"
-                         (or idris2-pretty-printer-width
-                             "infinite"))))
+  (let ((_command (format ":consolewidth %s"
+                          (or idris2-pretty-printer-width
+                              "infinite"))))
     (when (and idris2-process
                (not idris2-prover-currently-proving))
       ;; (idris2-eval `(:interpret ,command) t) TIMHACK
-     )))
+      )))
 
 ;;; Computing a menu with these commands
 (defun idris2-context-menu-items (plist)

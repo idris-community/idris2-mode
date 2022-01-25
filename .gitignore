@@ -1,5 +1,13 @@
-*~
+# ignore files
+
+/docs/*.aux
+/docs/*.log
+/docs/*.pdf
+/docs/auto/
+
+*.ttc
+*.ttm
+
 *.elc
-documentation.aux
-documentation.log
-documentation.pdf
+
+*~

@@ -28,7 +28,7 @@
 (require 'idris2-settings)
 (require 'inferior-idris2)
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 ; consisting of three buffers:
 ; ------------------------------
@@ -145,8 +145,7 @@ string and whose cadr is highlighting information."
                  (point)))
          (result (idris2-eval `(:repl-completions ,input))))
     (cl-destructuring-bind (completions _partial) (car result)
-      (if (null completions)
-          nil
+      (unless (null completions)
         (list start (point) completions)))))
 
 (defun idris2-prover-find-tactic (start-pos)
@@ -167,8 +166,7 @@ left margin."
       (while (and (not (eobp)) (not (looking-at-p "[a-zA-Z]")))
         (forward-line))
 
-      (if (eobp) ;; if at end of buffer, no tactic to be found!
-          nil
+      (unless (eobp) ;; if at end of buffer, no tactic to be found!
         (setq tactic-start (point))
 
         ;; Go forward until end of buffer or non-blank line at left margin
@@ -185,15 +183,13 @@ left margin."
 
         (cons tactic-start tactic-end)))))
 
-
-
 (defun idris2-prover-script-backward ()
   "Backward one piece of proof script"
   (interactive)
   (idris2-eval-async (list :interpret (if idris2-enable-elab-prover ":undo" "undo"))
-                    #'(lambda (_result) t)
-                    #'(lambda (condition)
-                        (message (concat idris2-prover-error-message-prefix condition)))))
+                     #'(lambda (_result) t)
+                     #'(lambda (condition)
+                         (message (concat idris2-prover-error-message-prefix condition)))))
 
 (defun idris2-prover-script-forward ()
   "Forward one piece of proof script."
@@ -246,8 +242,8 @@ left margin."
                    (setq idris2-prover-script-processing-overlay nil))
                  (setq idris2-prover-script-warning-overlay
                        (idris2-warning-create-overlay idris2-prover-script-processed
-                                                     idris2-prover-script-processing
-                                                     condition))
+                                                      idris2-prover-script-processing
+                                                      condition))
                  ;; Restore the original position of the marker for
                  ;; the processed region to prevent Emacs and Idris2
                  ;; from getting out of sync RE proof script contents
@@ -267,9 +263,9 @@ left margin."
   (interactive)
   (if idris2-prover-currently-proving
       (idris2-eval-async (list :interpret (if idris2-enable-elab-prover ":qed" "qed"))
-                        #'(lambda (_result) t)
-                        #'(lambda (condition)
-                            (message (concat idris2-prover-error-message-prefix condition))))
+                         #'(lambda (_result) t)
+                         #'(lambda (condition)
+                             (message (concat idris2-prover-error-message-prefix condition))))
     (error "No proof in progress")))
 
 (easy-menu-define idris2-prover-script-mode-menu idris2-prover-script-mode-map
@@ -278,8 +274,7 @@ left margin."
     ["Advance" idris2-prover-script-forward t]
     ["Retract" idris2-prover-script-backward t]
     ["QED" idris2-prover-script-qed t]
-    ["Abandon" idris2-prover-abandon t])
-  )
+    ["Abandon" idris2-prover-abandon t]))
 
 (define-derived-mode idris2-prover-script-mode prog-mode "Idris2-Proof-Script"
   "Major mode for interacting with Idris2 proof script.
@@ -395,7 +390,6 @@ the length reported by Idris2."
               idris2-prover-saved-window-configuration))
     (set-window-configuration idris2-prover-saved-window-configuration))
   (setq idris2-prover-saved-window-configuration nil))
-
 
 (autoload 'idris2-repl-write-string "idris2-repl.el")
 (defun idris2-prover-event-hook-function (event)

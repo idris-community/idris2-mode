@@ -4,6 +4,7 @@
 ;; This file defines defvar-local, which was introduced in Emacs 24.3, and string-suffix-p, from Emacs 24.4.
 
 ;;; Code:
+
 (require 'subr-x nil 'no-error)   ; Additional utilities, Emacs 24.4 and upwards
 
 (eval-and-compile

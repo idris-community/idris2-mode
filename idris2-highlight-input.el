@@ -72,7 +72,7 @@ See Info node `(elisp)Overlay Properties' to understand how ARGS are used."
                                                       (get-buffer buffer))))
                 (overlay-put highlight-overlay 'idris2-source-highlight t)
                 (idris2-add-overlay-properties highlight-overlay
-                                              (idris2-semantic-properties highlight))
+                                               (idris2-semantic-properties highlight))
                 (overlay-put highlight-overlay
                              'modification-hooks
                              '(idris2-highlight--overlay-modification-hook)))))
@@ -81,7 +81,6 @@ See Info node `(elisp)Overlay Properties' to understand how ARGS are used."
                    start-line start-col
                    end-line end-col
                    highlight ))))))
-
 
 (provide 'idris2-highlight-input)
 ;;; idris2-highlight-input.el ends here
