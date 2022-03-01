@@ -619,7 +619,7 @@ KILLFLAG is set if N was explicitly specified."
   "Display the internal documentation for the name at point, considered as a global variable."
   (interactive "P")
   (let ((name (if thing (read-string "Docs: ")
-                (print (idris2-name-at-point)))))
+                (idris2-name-at-point))))
     (when name
       (idris2-info-for-name :docs-for name))))
 
