@@ -336,17 +336,7 @@ Use this in Idris2 source buffers."
   "Return the name at point, taking into account semantic
 annotations. Use this in Idris2 source buffers or in
 compiler-annotated output. Does not return a line number."
-  ;; co: this isn't working right... pointer on function name and it goes to first argument.
-  ;;     TODO 2.9 not sure these overlays are appropriate in general, anyway. may rewrite with text properties
-  ;; (let ((ref (cl-remove-if
-  ;;             #'null
-  ;;             (cons (get-text-property (point) 'idris2-ref)
-  ;;                   (cl-loop for overlay in (overlays-at (point))
-  ;;                            collecting (overlay-get overlay 'idris2-ref))))))
-    ;; (if (null ref)
-        (car (idris2-thing-at-point))
-  ;; (car ref))))
-  )
+  (car (idris2-thing-at-point)))
 
 (defun idris2-info-for-name (what name &optional pos)
   "Display the type for a name."
@@ -625,10 +615,13 @@ KILLFLAG is set if N was explicitly specified."
   (interactive "sSearch for type: ")
   (idris2-info-for-name :interpret (concat ":search " what)))
 
-(defun idris2-docs-at-point (_thing)
-  "Display the internal documentation for the name at point, considered as a global variable"
-  (interactive)
-  (message "Not implemented yet"))
+(defun idris2-docs-at-point (thing)
+  "Display the internal documentation for the name at point, considered as a global variable."
+  (interactive "P")
+  (let ((name (if thing (read-string "Docs: ")
+                (print (idris2-name-at-point)))))
+    (when name
+      (idris2-info-for-name :docs-for name))))
 
 (defun idris2-eldoc-lookup ()
   "Support for showing type signatures in the modeline when there's a running Idris2"
