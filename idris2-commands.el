@@ -205,7 +205,6 @@ A prefix argument forces loading but only up to the current line."
                (srcdir (car dir-and-fn)))
           (setq idris2-currently-loaded-buffer nil)
           (idris2-switch-working-directory srcdir)
-          (idris2-delete-ibc t) ;; delete the ibc to avoid interfering with partial loads
           (idris2-eval-async
            (if idris2-load-to-here
                `(:load-file ,fn ,(save-excursion
@@ -885,23 +884,6 @@ type-correct, so loading will fail."
         (setq idris2-loaded-region-overlay nil)))
     (idris2-prover-end)
     (idris2-kill-buffers)))
-
-(defun idris2-delete-ibc (no-confirmation)
-  "Delete the IBC file for the current buffer. A prefix argument
-means to not ask for confirmation."
-  (interactive "P")
-  (let* ((fname (buffer-file-name))
-         (ibc (concat (file-name-sans-extension fname) ".ibc")))
-    (if (not (or (string= (file-name-extension fname) "idr")
-                 (string= (file-name-extension fname) "lidr")
-                 (string= (file-name-extension fname) "org")
-                 (string= (file-name-extension fname) "markdown")
-                 (string= (file-name-extension fname) "md")))
-        (error "The current file is not an Idris2 file")
-      (when (or no-confirmation (y-or-n-p (concat "Really delete " ibc "?")))
-        (when (file-exists-p ibc)
-          (delete-file ibc)
-          (message "%s deleted" ibc))))))
 
 (defun idris2--active-term-beginning (term pos)
   "Find the beginning of active term TERM that occurs at POS.
