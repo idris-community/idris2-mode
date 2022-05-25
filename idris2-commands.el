@@ -773,7 +773,7 @@ KILLFLAG is set if N was explicitly specified."
 
 (defun idris2-compile-and-execute (name)
   "Execute the program in the current buffer"
-  (interactive "MEntrypoint: ")
+  (interactive "MExpression to compile & execute: ")
   (idris2-load-file-sync)
   (idris2-repl-eval-string (format ":exec %s" name) 0))
 
