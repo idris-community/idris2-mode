@@ -783,21 +783,31 @@ command to prompt for hints and recursion depth, while a numeric
 prefix argument sets the recursion depth directly."
   (interactive "P")
   (let ((what (idris2-thing-at-point)))
-    (when (car what)
-      (save-excursion (idris2-load-file-sync))
-      (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
-        (if (string= result "")
-            (error "Nothing found")
-          (save-excursion
-            (let ((start (progn (search-backward "?") (point)))
-                  (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-              (delete-region start end))
-            (insert result)))))))
+    (unless (car what)
+      (error "Could not find a hole at point to run proof search on"))
+    (save-excursion (idris2-load-file-sync))
+    (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
+      (if (string= result "")
+          (error "Nothing found")
+        (save-excursion
+          (let ((start (progn (search-backward "?") (point)))
+                (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+            (delete-region start end))
+          (insert result))))))
 
-(defun idris2-refine (_name)
-  "Refine by some NAME, without recursive proof search."
-  (interactive)
-  (message "No refine in Idris2 yet!"))
+(defun idris2-refine (expr)
+  "Refine by some EXPR, without recursive proof search."
+  (interactive "MRefine by: ")
+  (let ((what (idris2-thing-at-point)))
+    (unless (car what)
+      (error "Could not find a hole at point to refine by"))
+    (save-excursion (idris2-load-file-sync))
+    (let ((result (car (idris2-eval `(:refine ,(cadr what) ,(car what) ,expr)))))
+      (save-excursion
+        (let ((start (progn (search-backward "?") (point)))
+              (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+          (delete-region start end))
+        (insert result)))))
 
 (defun idris2-identifier-backwards-from-point ()
   (let (identifier-start
