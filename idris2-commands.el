@@ -795,6 +795,20 @@ prefix argument sets the recursion depth directly."
             (delete-region start end))
           (insert result))))))
 
+(defun idris2-intro ()
+  "Introduce the unambiguous constructor to use in this hole."
+  (interactive)
+  (let ((what (idris2-thing-at-point)))
+    (unless (car what)
+      (error "Could not find a hole at point to refine by"))
+    (save-excursion (idris2-load-file-sync))
+    (let ((result (car (idris2-eval `(:intro ,(cadr what) ,(car what))))))
+      (save-excursion
+        (let ((start (progn (search-backward "?") (point)))
+              (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+          (delete-region start end))
+        (insert result)))))
+
 (defun idris2-refine (expr)
   "Refine by some EXPR, without recursive proof search."
   (interactive "MRefine by: ")
