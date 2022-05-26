@@ -771,11 +771,11 @@ KILLFLAG is set if N was explicitly specified."
                 "idris2-make-lemma: recieved an unsupported \
 'provisional-definition-lemma' response. Ignored.")))))))
 
-(defun idris2-compile-and-execute ()
+(defun idris2-compile-and-execute (name)
   "Execute the program in the current buffer"
-  (interactive)
+  (interactive "MExpression to compile & execute: ")
   (idris2-load-file-sync)
-  (idris2-eval '(:interpret ":exec")))
+  (idris2-repl-eval-string (format ":exec %s" name) 0))
 
 (defun idris2-proof-search (&optional _arg)
   "Invoke the proof search. A plain prefix argument causes the

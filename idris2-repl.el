@@ -412,7 +412,7 @@ Invokes `idris2-repl-mode-hook'."
 
 
 (defun idris2-repl-insert-result (string &optional highlighting)
-  "Insert STRING and mark it asg evaluation result.
+  "Insert STRING and mark it as evaluation result.
 Optional argument HIGHLIGHTING is a collection of semantic
 highlighting information from Idris2."
   (with-current-buffer (idris2-repl-buffer)

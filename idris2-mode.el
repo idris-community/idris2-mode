@@ -70,7 +70,6 @@
     ["Load file" idris2-load-file t]
     ["Choose packages" idris2-set-idris2-load-packages t]
     ["Compile and execute" idris2-compile-and-execute]
-    ["Delete IBC file" idris2-delete-ibc t]
     ["View compiler log" idris2-view-compiler-log (get-buffer idris2-log-buffer-name)]
     ["Quit inferior idris2 process" idris2-quit t]
     "-----------------"
