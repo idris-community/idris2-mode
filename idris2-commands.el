@@ -780,11 +780,11 @@ KILLFLAG is set if N was explicitly specified."
 (defun idris2-replace-hole-with (expr)
   "Replace the hole under the cursor by some EXPR"
   (interactive)
-  (save-excursion (idris2-load-file-sync))
-  (let ((start (progn (search-backward "?") (point)))
-        (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-    (delete-region start end))
-  (insert expr))
+  (save-excursion
+    (let ((start (progn (search-backward "?") (point)))
+          (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+      (delete-region start end))
+    (insert expr)))
 
 (defun idris2-proof-search (&optional _arg)
   "Invoke the proof search. A plain prefix argument causes the
@@ -794,6 +794,7 @@ prefix argument sets the recursion depth directly."
   (let ((what (idris2-thing-at-point)))
     (unless (car what)
       (error "Could not find a hole at point to run proof search on"))
+    (save-excursion (idris2-load-file-sync))
     (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
       (if (string= result "")
           (error "Nothing found")
@@ -819,11 +820,7 @@ prefix argument sets the recursion depth directly."
       (error "Could not find a hole at point to refine by"))
     (save-excursion (idris2-load-file-sync))
     (let ((result (car (idris2-eval `(:refine ,(cadr what) ,(car what) ,expr)))))
-      (save-excursion
-        (let ((start (progn (search-backward "?") (point)))
-              (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-          (delete-region start end))
-        (insert result)))))
+      (idris2-replace-hole-with result))))
 
 (defun idris2-identifier-backwards-from-point ()
   (let (identifier-start
