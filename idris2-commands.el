@@ -833,10 +833,12 @@ type-correct, so loading will fail."
     (cl-destructuring-bind (identifier start end) (idris2-identifier-backwards-from-point)
       (when identifier
         (let ((result (car (idris2-eval `(:repl-completions ,identifier)))))
-          (cl-destructuring-bind (completions _partial) result
+          (cl-destructuring-bind (completions partial) result
             (unless (null completions)
-              (list start end completions
-                    :exclusive 'no))))))))
+              (let ((choice (pcase completions
+                              (`(,unique) unique)
+                              (_ (ido-completing-read "Multiple completions: " completions))))))
+                (list start end (list (concat partial choice)) :exclusive 'no)))))))))
 
 (defun idris2-complete-keyword-at-point ()
   "Attempt to complete the symbol at point as an Idris2 keyword."
@@ -849,8 +851,7 @@ type-correct, so loading will fail."
                          (apply-partially #'string-prefix-p identifier)
                          all-idris2-keywords)))
         (unless (null candidates)
-          (list start end candidates
-                :exclusive 'no))))))
+          (list start end candidates :exclusive 'no))))))
 
 (defun idris2-list-holes ()
   "Get a list of currently-open holes"
