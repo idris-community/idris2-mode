@@ -777,6 +777,15 @@ KILLFLAG is set if N was explicitly specified."
   (idris2-load-file-sync)
   (idris2-repl-eval-string (format ":exec %s" name) 0))
 
+(defun idris2-replace-hole-with (expr)
+  "Replace the hole under the cursor by some EXPR"
+  (interactive)
+  (save-excursion
+    (let ((start (progn (search-backward "?") (point)))
+          (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
+      (delete-region start end))
+    (insert expr)))
+
 (defun idris2-proof-search (&optional _arg)
   "Invoke the proof search. A plain prefix argument causes the
 command to prompt for hints and recursion depth, while a numeric
@@ -789,11 +798,19 @@ prefix argument sets the recursion depth directly."
     (let ((result (car (idris2-eval `(:proof-search ,(cadr what) ,(car what))))))
       (if (string= result "")
           (error "Nothing found")
-        (save-excursion
-          (let ((start (progn (search-backward "?") (point)))
-                (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-            (delete-region start end))
-          (insert result))))))
+        (idris2-replace-hole-with result)))))
+
+(defun idris2-intro ()
+  "Introduce the unambiguous constructor to use in this hole."
+  (interactive)
+  (let ((what (idris2-thing-at-point)))
+    (unless (car what)
+      (error "Could not find a hole at point to refine by"))
+    (save-excursion (idris2-load-file-sync))
+    (let ((results (car (idris2-eval `(:intro ,(cadr what) ,(car what))))))
+      (pcase results
+        (`(,result) (idris2-replace-hole-with result))
+        (_ (idris2-replace-hole-with (ido-completing-read "I'm hesitating between: " results)))))))
 
 (defun idris2-refine (expr)
   "Refine by some EXPR, without recursive proof search."
@@ -803,11 +820,7 @@ prefix argument sets the recursion depth directly."
       (error "Could not find a hole at point to refine by"))
     (save-excursion (idris2-load-file-sync))
     (let ((result (car (idris2-eval `(:refine ,(cadr what) ,(car what) ,expr)))))
-      (save-excursion
-        (let ((start (progn (search-backward "?") (point)))
-              (end (progn (forward-char) (search-forward-regexp "[^a-zA-Z0-9_']") (backward-char) (point))))
-          (delete-region start end))
-        (insert result)))))
+      (idris2-replace-hole-with result))))
 
 (defun idris2-identifier-backwards-from-point ()
   (let (identifier-start

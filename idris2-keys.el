@@ -62,6 +62,7 @@
   (define-key map (kbd "C-c C-a") 'idris2-proof-search)
   ;; co: not in Idris2 yet
   (define-key map (kbd "C-c C-r") 'idris2-refine)
+  (define-key map (kbd "C-c C-i") 'idris2-intro)
   (define-key map (kbd "RET") 'idris2-newline-and-indent)
   ;; Not using `kbd' due to oddness about backspace and delete
   (define-key map [delete] 'idris2-delete-forward-char)
