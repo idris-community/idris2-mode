@@ -850,7 +850,7 @@ type-correct, so loading will fail."
             (unless (null completions)
               (let ((choice (pcase completions
                               (`(,unique) unique)
-                              (_ (ido-completing-read "Multiple completions: " completions))))))
+                              (_ (ido-completing-read "Multiple completions: " completions)))))
                 (list start end (list (concat partial choice)) :exclusive 'no)))))))))
 
 (defun idris2-complete-keyword-at-point ()
