@@ -125,8 +125,7 @@ Invokes `idris2-mode-hook'."
 
   ;; REPL completion for Idris2 source
   (set (make-local-variable 'completion-at-point-functions)
-       (list 'idris2-complete-symbol-at-point
-             'idris2-complete-keyword-at-point))
+       (list 'idris2-complete-at-point))
 
   ;; imenu support
   (set (make-local-variable 'imenu-case-fold-search) nil)
