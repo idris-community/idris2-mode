@@ -849,11 +849,9 @@ type-correct, so loading will fail."
            (target (buffer-substring-no-properties start end))
            (result (car (idris2-eval `(:repl-completions ,target)))))
       (cl-destructuring-bind (completions partial) result
-        (unless (null completions)
-          (let ((choice (pcase completions
-                          (`(,unique) unique)
-                          (_ (ido-completing-read "Multiple completions: " completions)))))
-            (list start end (list (concat partial choice)) :exclusive 'no)))))))
+        (if (null completions)
+            nil
+          (list (+ start (length partial)) end completions :exclusive 'no))))))
 
 
 (defun idris2-list-holes ()
