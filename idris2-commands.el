@@ -409,7 +409,7 @@ compiler-annotated output. Does not return a line number."
   (let ((name (if thing (read-string "Print definition: ")
                 (idris2-name-at-point))))
     (when name
-      (idris2-info-for-name :print-definition name))))
+      (idris2-info-for-name :interpret (concat ":printdef " name)))))
 
 (defun idris2-extract-location-from-name (str)
   "Given a string in the form '(name) (possibly 'implementation' at (filename):(startline):(startcol)--(endline):(endcol)', extracts filename, startline and startcol as a list or nil otherwise"
@@ -1224,15 +1224,18 @@ of the term to replace."
                        (list "Get definition"
                              (lambda ()
                                (interactive)
-                               (idris2-info-for-name :print-definition ref)))
-                       (list "Who calls?"
-                             (lambda ()
-                               (interactive)
-                               (idris2-who-calls-name ref)))
-                       (list "Calls who?"
-                             (lambda ()
-                               (interactive)
-                               (idris2-name-calls-who ref)))))
+                               (idris2-info-for-name :interpret (concat ":printdef " ref))))
+                       ;; currently broken
+                       ;; (list "Who calls?"
+                       ;;       (lambda ()
+                       ;;         (interactive)
+                       ;;         (idris2-who-calls-name ref)))
+                       )
+                       ;; (list "Calls who?"
+                       ;;       (lambda ()
+                       ;;         (interactive)
+                      ;;         (idris2-name-calls-who ref)))
+                      )
                      ((equal ref-style :metavar)
                       (cons (list "Launch prover"
                                   (lambda ()
@@ -1243,7 +1246,7 @@ of the term to replace."
                                           (lambda ()
                                             (interactive)
                                             (idris2-prove-hole ref t))))))))))
-     (when namespace
+     (when nil ;; used to be: `(when namespace` but it's currently broken
        (list (list (concat "Browse " namespace)
                    (lambda ()
                      (interactive)
