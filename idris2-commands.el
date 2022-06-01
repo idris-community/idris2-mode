@@ -836,34 +836,23 @@ prefix argument sets the recursion depth directly."
                 identifier-end)
         failure))))
 
-(defun idris2-complete-symbol-at-point ()
-  "Attempt to complete the symbol at point as a global variable.
+(defun idris2-complete-at-point ()
+  "Attempt to complete at point. We pass the whole line to idris2 who can
+then decide based on the context whether to complete a pragma, or a global name.
 
 This function does not attempt to load the buffer if it's not
 already loaded, as a buffer awaiting completion is probably not
 type-correct, so loading will fail."
   (unless (not idris2-process)
-    (cl-destructuring-bind (identifier start end) (idris2-identifier-backwards-from-point)
-      (when identifier
-        (let ((result (car (idris2-eval `(:repl-completions ,identifier)))))
-          (cl-destructuring-bind (completions _partial) result
-            (unless (null completions)
-              (list start end completions
-                    :exclusive 'no))))))))
+    (let* ((start  (line-beginning-position))
+           (end    (point))
+           (target (buffer-substring-no-properties start end))
+           (result (car (idris2-eval `(:repl-completions ,target)))))
+      (cl-destructuring-bind (completions partial) result
+        (if (null completions)
+            nil
+          (list (+ start (length partial)) end completions :exclusive 'no))))))
 
-(defun idris2-complete-keyword-at-point ()
-  "Attempt to complete the symbol at point as an Idris2 keyword."
-  (pcase-let* ((all-idris2-keywords
-                (append idris2-keywords idris2-definition-keywords))
-               (`(,identifier ,start ,end)
-                (idris2-identifier-backwards-from-point)))
-    (when identifier
-      (let ((candidates (cl-remove-if-not
-                         (apply-partially #'string-prefix-p identifier)
-                         all-idris2-keywords)))
-        (unless (null candidates)
-          (list start end candidates
-                :exclusive 'no))))))
 
 (defun idris2-list-holes ()
   "Get a list of currently-open holes"
