@@ -16,6 +16,21 @@ Then in your `~/.emacs.d/init.el` file, add:
 (require 'idris2-mode)
 ```
 
+## Doom Emacs
+
+If you're using Doom Emacs and are getting the error
+
+       "Idris2 (Not loaded)"
+with
+       Debugger entered--Lisp error: (file-missing "Searching for program" "No such file or directory" "idris2")   
+try the next step:
+
+From the command line, run:
+```
+$ ~/.emacs.d/bin/doom env
+```
+and restart Emacs.
+
 Here is what works so far:
 ```
 M-n		idris2-next-error
