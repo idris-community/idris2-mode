@@ -149,7 +149,7 @@ contributing the settings upstream to the theme maintainer."
     "implementation" "implicit" "import" "in" "infix" "infixl" "infixr"
     "module" "mutual" "namespace" "of" "let" "parameters" "partial"
     "pattern" "prefix" "private" "proof" "public" "rewrite" "syntax"
-    "tactics" "then" "total" "using" "where" "with"))
+    "tactics" "then" "total" "using" "hiding" "renaming" "where" "with"))
 
 
 (defconst idris2-special-char-regexp
