@@ -800,6 +800,63 @@ prefix argument sets the recursion depth directly."
           (error "Nothing found")
         (idris2-replace-hole-with result)))))
 
+(defvar-local def-region-start nil)
+(defvar-local def-region-end nil)
+
+(defun idris2-generate-def ()
+  "Generate defintion."
+  (interactive)
+  (let ((what (idris2-thing-at-point)))
+    (when (car what)
+      (save-excursion (idris2-load-file-sync))
+      (let ((result (car (idris2-eval `(:generate-def ,(cadr what) ,(car what)))))
+            final-point
+            (prefix (save-excursion
+                      (goto-char (point-min))
+                      (forward-line (1- (cadr what)))
+                      (goto-char (line-beginning-position))
+                      (re-search-forward "\\(^>?\\s-*\\)" nil t)
+                      (let ((prefix (match-string 1)))
+                        (if prefix
+                            prefix
+                          "")))))
+        (if (string= result "")
+            (error "Nothing found")
+          (goto-char (line-beginning-position))
+          (forward-line)
+          (while (and (not (eobp))
+                      (progn (goto-char (line-beginning-position))
+                             (looking-at-p (concat prefix "\\s-+"))))
+            (forward-line))
+          (insert prefix)
+          (setq final-point (point))
+          (setq def-region-start (point))
+          (insert result)
+          (setq def-region-end (point))
+          (newline)
+          (goto-char final-point)
+;          (save-excursion
+;            (forward-line 1)
+;            (setq def-region-start (point))
+;            (insert result)
+;            (setq def-region-end (point)))
+          )))))
+
+(defun idris2-generate-def-next ()
+  "Replace the previous generated definition with next definition, if it exists."
+  (interactive)
+  (if (not def-region-start)
+      (error "You must program search first before looking for subsequent program results.")
+    (let ((result (car (idris2-eval `:generate-def-next))))
+      (if (string= result "No more results")
+          (message "No more results")
+        (save-excursion
+          (goto-char def-region-start)
+          (delete-region def-region-start def-region-end)
+          (setq def-region-start (point))
+          (insert result)
+          (setq def-region-end (point)))))))
+
 (defun idris2-intro ()
   "Introduce the unambiguous constructor to use in this hole."
   (interactive)

@@ -60,6 +60,8 @@
   (define-key map (kbd "C-c C-s") 'idris2-add-clause)
   (define-key map (kbd "C-c C-w") 'idris2-make-with-block)
   (define-key map (kbd "C-c C-a") 'idris2-proof-search)
+  (define-key map (kbd "C-c C-g") 'idris2-generate-def)
+  (define-key map (kbd "C-c C-S-g") 'idris2-generate-def-next)
   ;; co: not in Idris2 yet
   (define-key map (kbd "C-c C-r") 'idris2-refine)
   (define-key map (kbd "C-c C-i") 'idris2-intro)

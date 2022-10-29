@@ -81,6 +81,8 @@
     ["Extract lemma from hole" idris2-make-lemma t]
     ["Solve hole with case expression" idris2-make-cases-from-hole t]
     ["Attempt to solve hole" idris2-proof-search t]
+    ["Generate definition" idris2-generate-def t]
+    ["Get next definition" idris2-generate-def-next t]
     ["Display type" idris2-type-at-point t]
     ["Goto definition" idris2-jump-to-def t]
     "-----------------"
