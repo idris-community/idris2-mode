@@ -5,6 +5,8 @@ This is an emacs mode for editing Idris 2 code.
 It's a copy of (https://github.com/idris-hackers/idris-mode) mostly, for working with Idris 2 in its
 present state.  See that readme for more details.
 
+## Installation
+
 Install it by running within your `~/.emacs.d` directory:
 ```
 $ git clone https://github.com/idris-community/idris2-mode
@@ -16,20 +18,7 @@ Then in your `~/.emacs.d/init.el` file, add:
 (require 'idris2-mode)
 ```
 
-## Doom Emacs
-
-If you're using Doom Emacs and are getting the error
-
-       "Idris2 (Not loaded)"
-with
-       Debugger entered--Lisp error: (file-missing "Searching for program" "No such file or directory" "idris2")   
-try the next step:
-
-From the command line, run:
-```
-$ ~/.emacs.d/bin/doom env
-```
-and restart Emacs.
+## Commands
 
 Here is what works so far:
 ```
@@ -53,6 +42,33 @@ C-c C-d C-t	idris2-type-search
 <unmapped>  idris2-jump-to-def
 <unmapped>  idris2-jump-to-def-same-window
 ```
+
+## Customization
+
+Customize various aspects of the mode using `M-x customize-group RET idris2 RET`.
+
+- `idris2-info-buffer-focus` (default: `nil`)
+
+  If non-`nil`, pop to the Idris2 info buffer if it was not visible.
+
+## Troubleshooting
+
+### Doom Emacs
+
+If you're using Doom Emacs and are getting the error
+
+       "Idris2 (Not loaded)"
+with
+       Debugger entered--Lisp error: (file-missing "Searching for program" "No such file or directory" "idris2")
+try the next step:
+
+From the command line, run:
+```
+$ ~/.emacs.d/bin/doom env
+```
+and restart Emacs.
+
+### evil-mode
 
 Note, if you use evil-mode, you'll probably want to use this to prevent a huge lag when editing
 files, see https://github.com/ProofGeneral/PG/issues/427#issuecomment-500616289 for more details:
