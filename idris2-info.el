@@ -138,9 +138,10 @@ Ensure that the buffer is in `idris2-info-mode'."
       (when (or past future) (newline))
       (goto-char (point-min))))
   (unless (idris2-info-buffer-visible-p)
-    (pop-to-buffer (idris2-info-buffer))
-    (message "Press q to close the Idris2 info buffer."))
-  (pop-to-buffer idris2-buffer-to-return-to-from-info-buffer))
+    (if idris2-info-buffer-focus
+        (progn (pop-to-buffer (idris2-info-buffer))
+               (message "Press q to close the Idris2 info buffer."))
+      (display-buffer (idris2-info-buffer)))))
 
 (defmacro with-idris2-info-buffer (&rest cmds)
   "Execute `CMDS' in a fresh Idris2 info buffer, then display it to the user."

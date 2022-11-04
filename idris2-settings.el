@@ -315,4 +315,12 @@ Set to `nil' for no banner."
   :type 'boolean
   :group 'idris2-repl)
 
+(defgroup idris2-info-buffer nil "Idris2 info buffer" :group 'idris2)
+
+(defcustom idris2-info-buffer-focus nil
+  "If `nil', keep focus in current buffer and only make the info buffer visible.
+If non-`nil', pop to the Idris2 info buffer if it was not visible."
+  :type 'boolean
+  :group 'idris2-info-buffer)
+
 (provide 'idris2-settings)
