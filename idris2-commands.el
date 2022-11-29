@@ -344,12 +344,40 @@ compiler-annotated output. Does not return a line number."
          (formatting (cdr ty)))
     (idris2-show-info (format "%s" result) formatting)))
 
+(defun file-for-fully-qualified-name (name)
+  "Guesses a relative filename for a full-qualified idris2 name"
+  (let* ((name-components (butlast (split-string name "\\.")))
+         (dirs (butlast name-components))
+         (name (car (last name-components)))
+         (full-dir (mapconcat #'file-name-as-directory dirs ""))
+	)
+    (concat full-dir name ".idr")
+    )
+  )
+
+(defun idris2-find-full-path (file name)
+  "Searches through idris2-process-current-working-directory and idris2-source-locations for given file and returns first match."
+  (if (file-exists-p file) file
+    (let* ((file-dirs (cons idris2-process-current-working-directory idris2-source-locations))
+	   (file-based-on-name (file-for-fully-qualified-name name))
+	      ;;(replace-regexp-in-string (replace-regexp-in-string "\(.*\)\..*" "\1" name)
+           (poss-full-filenames (mapcar #'(lambda (d) (concat (file-name-as-directory d) file-based-on-name)) file-dirs))
+           (act-full-filenames (seq-filter #'file-exists-p poss-full-filenames))
+          )
+      (unless (null act-full-filenames)
+	(unless (null (cdr act-full-filenames))
+	  (message "Multiple locations found for file '%s': %s" file act-full-filenames))
+	(car act-full-filenames))
+      )
+    )
+  )
+
 (defun idris2-jump-to-location (loc is-same-window)
   "Jumps to specified location."
   (pcase-let* ((`(,_name (:filename ,file)
                          (:start ,line ,col)
                          (:end ,_ ,_)) loc)
-	       (full-path file))
+	       (full-path (idris2-find-full-path file _name)))
     (xref-push-marker-stack) ;; this pushes a "tag" mark. haskell mode
     ;; also does this and it seems appropriate, allows the user to pop
     ;; the tag and go back to the previous point. (pop-tag-mark
