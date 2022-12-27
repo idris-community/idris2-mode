@@ -92,25 +92,26 @@ As of 20140807 (Idris2 0.9.14.1-git:abee538) (endline endcolumn) is mostly the s
         (when (not (null buffer))
           (with-current-buffer buffer
             (save-restriction
-              (widen) ;; Show errors at the proper location in narrowed buffers
-              (goto-char (point-min))
-              (cl-multiple-value-bind (startp endp) (idris2-get-line-region startline)
-                (goto-char startp)
-                (let ((start (+ startp startcol))
-                      (end (if (and (= startline endline) (= startcol endcol))
-                               ;; this is a hack to have warnings reported which point to empty lines
-                               (if (= startp endp)
-                                   (progn (insert " ")
-                                          (1+ endp))
-                                 endp)
-                             (+ (save-excursion
-                                  (goto-char (point-min))
-                                  (line-beginning-position endline))
-                                endcol)))
-                      (overlay (idris2-warning-overlay-at-point)))
-                  (if overlay
-                      (idris2-warning-merge-overlays overlay message)
-                    (idris2-warning-create-overlay start end message)))))))))))
+              (save-excursion
+                (widen) ;; Show errors at the proper location in narrowed buffers
+                (goto-char (point-min))
+                (cl-multiple-value-bind (startp endp) (idris2-get-line-region startline)
+                  (goto-char startp)
+                  (let ((start (+ startp startcol))
+                        (end (if (and (= startline endline) (= startcol endcol))
+                                 ;; this is a hack to have warnings reported which point to empty lines
+                                 (if (= startp endp)
+                                     (progn (insert " ")
+                                            (1+ endp))
+                                   endp)
+                               (+ (save-excursion
+                                    (goto-char (point-min))
+                                    (line-beginning-position endline))
+                                  endcol)))
+                        (overlay (idris2-warning-overlay-at-point)))
+                    (if overlay
+                        (idris2-warning-merge-overlays overlay message)
+                      (idris2-warning-create-overlay start end message))))))))))))
 
 (defun idris2-warning-merge-overlays (overlay message)
   (overlay-put overlay 'help-echo
