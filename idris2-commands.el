@@ -847,11 +847,12 @@ type-correct, so loading will fail."
     (let* ((start  (line-beginning-position))
            (end    (point))
            (target (buffer-substring-no-properties start end))
-           (result (car (idris2-eval `(:repl-completions ,target)))))
-      (cl-destructuring-bind (completions partial) result
-        (if (null completions)
-            nil
-          (list (+ start (length partial)) end completions :exclusive 'no))))))
+           (result (car (idris2-eval `(:repl-completions ,target) t))))
+      (and result
+	   (cl-destructuring-bind (completions partial) result
+	     (if (null completions)
+		 nil
+	       (list (+ start (length partial)) end completions :exclusive 'no)))))))
 
 
 (defun idris2-list-holes ()
