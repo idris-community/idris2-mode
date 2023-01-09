@@ -143,10 +143,11 @@ string and whose cadr is highlighting information."
          (input (buffer-substring-no-properties
                  start
                  (point)))
-         (result (idris2-eval `(:repl-completions ,input))))
-    (cl-destructuring-bind (completions _partial) (car result)
-      (unless (null completions)
-        (list start (point) completions)))))
+         (result (car (idris2-eval `(:repl-completions ,input) t))))
+    (and result
+	 (cl-destructuring-bind (completions _partial) result
+	   (unless (null completions)
+	     (list start (point) completions))))))
 
 (defun idris2-prover-find-tactic (start-pos)
   "Use some layout heuristics to find the tactic beginning at

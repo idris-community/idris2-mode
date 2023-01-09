@@ -311,11 +311,12 @@ Invokes `idris2-repl-mode-hook'."
 (defun idris2-repl-complete ()
   "Completion of the current input"
   (let* ((input (idris2-repl-current-input))
-         (result (idris2-eval `(:repl-completions ,input))))
-    (cl-destructuring-bind (completions partial) (car result)
-      (if (null completions)
-          nil
-        (list (+ idris2-input-start (length partial)) (point-max) completions)))))
+         (result (car (idris2-eval `(:repl-completions ,input) t))))
+    (and result
+	 (cl-destructuring-bind (completions partial) result
+	   (if (null completions)
+	       nil
+	     (list (+ idris2-input-start (length partial)) (point-max) completions))))))
 
 (defun find-common-prefix (input slist)
   "Finds longest common prefix of all strings in list."
